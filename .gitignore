@@ -1,0 +1,10 @@
+.project
+.pydevproject
+*.pyc
+__pycache__
+docutils*
+MANIFEST
+dist
+build
+*.egg-info
+*.html
