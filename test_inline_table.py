@@ -188,7 +188,7 @@ class TestTable(unittest.TestCase):
 
 if __name__ == '__main__':
     result1 = doctest.testmod(inline_table)
-    result2 = doctest.testfile('README.txt')
+    result2 = doctest.testfile('README.rst')
     attempted = result1.attempted + result2.attempted
     failed = result1.failed + result2.failed
     print('Ran %d tests' % attempted, file=sys.stderr)
