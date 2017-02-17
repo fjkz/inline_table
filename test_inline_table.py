@@ -4,7 +4,7 @@ import unittest
 
 from docutils.parsers.rst.tableparser import SimpleTableParser
 from docutils.statemachine import StringList
-from inline_table import compile_table, Table, Parser
+from inline_table import compile, Table, Parser
 
 
 class TestDocutils(unittest.TestCase):
@@ -245,7 +245,7 @@ class TestParser(unittest.TestCase):
 class TestCompile(unittest.TestCase):
 
     def test_operator(self):
-        tb = compile_table("""
+        tb = compile("""
         === === ========
          a   b   aplusb
         === === ========
@@ -256,7 +256,7 @@ class TestCompile(unittest.TestCase):
         self.assertEqual(ret, 2)
 
     def test_variable(self):
-        tb = compile_table("""
+        tb = compile("""
         === ===
          A   B
         === ===
@@ -272,7 +272,7 @@ class TestCompile(unittest.TestCase):
         self.assertEqual(ret, 2)
 
     def test_builtin(self):
-        tb = compile_table("""
+        tb = compile("""
         ======
           A
         ======
@@ -284,7 +284,7 @@ class TestCompile(unittest.TestCase):
 
     def test_variable_leak1(self):
         try:
-            compile_table("""
+            compile("""
             ===
              A
             ===
@@ -297,7 +297,7 @@ class TestCompile(unittest.TestCase):
 
     def test_variable_leak2(self):
         try:
-            compile_table("""
+            compile("""
             =====
              A
             =====
@@ -312,7 +312,7 @@ class TestCompile(unittest.TestCase):
 class TestQuery(unittest.TestCase):
 
     def test_wildcard(self):
-        tb = compile_table("""
+        tb = compile("""
         === ===
          A   B
         === ===
@@ -327,7 +327,7 @@ class TestQuery(unittest.TestCase):
         self.assertEqual([str(v) for v in ret], ['2', '2'])
 
     def test_na(self):
-        tb = compile_table("""
+        tb = compile("""
         === ===
          A   B
         === ===
@@ -341,7 +341,7 @@ class TestQuery(unittest.TestCase):
             pass
 
     def test_na_for_key(self):
-        tb = compile_table("""
+        tb = compile("""
         === ===
          A   B
         === ===
@@ -424,7 +424,7 @@ class TestTable(unittest.TestCase):
 class TestAttrubutes(unittest.TestCase):
 
     def test_oneline(self):
-        tb = compile_table('''
+        tb = compile('''
             ==========
              a (value)
             ==========
@@ -434,7 +434,7 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret, [1])
 
     def test_value(self):
-        tb = compile_table('''
+        tb = compile('''
             =========
              a
             (value)
@@ -446,7 +446,7 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret, [1])
 
     def test_condition(self):
-        tb = compile_table('''
+        tb = compile('''
             =========== =====
              a           b
             (condition)
@@ -460,7 +460,7 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret, [1, False])
 
     def test_condition_right(self):
-        tb = compile_table('''
+        tb = compile('''
             ===== ===========
              a     b
                   (condition)
@@ -474,7 +474,7 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret, [False, 1])
 
     def test_consition_wildcard(self):
-        tb = compile_table('''
+        tb = compile('''
             =========== =====
              a           b
             (condition)
@@ -486,7 +486,7 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret, [1, False])
 
     def test_consition_na(self):
-        tb = compile_table('''
+        tb = compile('''
             =========== =====
              a           b
             (condition)
@@ -498,7 +498,7 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret, [1, False])
 
     def test_cond(self):
-        tb = compile_table('''
+        tb = compile('''
             ====== ===
               A     B
             (cond)
@@ -510,7 +510,7 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret, [1, 1])
 
     def test_string(self):
-        tb = compile_table('''
+        tb = compile('''
             ======== =====
             A        B
             (string) (str)
@@ -522,7 +522,7 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret, ['AAAAAAAA', 'BBBBB'])
 
     def test_regex(self):
-        tb = compile_table('''
+        tb = compile('''
             ======== =
              A       B
             (regex)

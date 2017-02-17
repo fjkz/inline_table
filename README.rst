@@ -22,12 +22,11 @@ Write a simple logic more simply.
 Usage
 =====
 
-Compile an ASCII table text with the ``compile_table`` function. We can get a
-`Table` object. We currently support only reStructuredText Simple Tables format.
-::
+Compile an ASCII table text with the ``compile`` function. We can get a `Table`
+object. We currently support only reStructuredText Simple Tables format. ::
 
     >>> import inline_table
-    >>> t1 = inline_table.compile_table('''
+    >>> t1 = inline_table.compile('''
     ...     === === ====
     ...      A   B   AB
     ...     === === ====
@@ -49,7 +48,7 @@ in the first matched low is returned. ::
 
 We can pass values to a table. ::
 
-    >>> t2 = inline_table.compile_table('''
+    >>> t2 = inline_table.compile('''
     ...     === =====
     ...     key value
     ...     === =====
@@ -65,7 +64,7 @@ The wild card and the not-applicable value are provided. We can write them
 respectively with ``*`` and ``N/A``. The wild card matches with any query, and
 a row including N/A is never returned. ::
 
-    >>> t3 = inline_table.compile_table('''
+    >>> t3 = inline_table.compile('''
     ...     === ===
     ...      K   V
     ...     === ===
@@ -95,7 +94,7 @@ Regex     (regex), (re)              Regular expression
 
 An example. ::
 
-    >>> t4 = inline_table.compile_table('''
+    >>> t4 = inline_table.compile('''
     ...     ========= ============= ========== =========
     ...     V (value) C (condition) S (string) R (regex)
     ...     ========= ============= ========== =========

@@ -4,10 +4,10 @@
 We can write source-code just like a design document.
 
 The following is a basic example. Compile an ASCII table text with the
-``compile_table`` function. And search data with the ``get`` method. ::
+``compile`` function. And search data with the ``get`` method. ::
 
     >>> import inline_table
-    >>> t = inline_table.compile_table('''
+    >>> t = inline_table.compile('''
     ... ====== ======= ====== ======
     ... state  event    next  action
     ... ====== ======= ====== ======
@@ -34,10 +34,10 @@ from docutils.statemachine import StringList
 __docformat__ = 'reStructuredText'
 __version__ = '0.0'
 
-__all__ = ('compile_table', 'Table')
+__all__ = ('compile', 'Table')
 
 
-def compile_table(text, **variables):
+def compile(text, **variables):
     """Compile an ASCII table text to a Table object.
 
     The text must be formated with reStructuredText Simple Table.
@@ -124,7 +124,7 @@ class Table:
 
         :Example:
 
-        >>> t = compile_table('''
+        >>> t = compile('''
         ... === =====
         ... key value
         ... === =====
@@ -185,7 +185,7 @@ class Table:
 
         :Example:
 
-        >>> t = compile_table('''
+        >>> t = compile('''
         ... === =====
         ... key value
         ... === =====
