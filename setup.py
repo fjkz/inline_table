@@ -2,9 +2,9 @@
 
 from setuptools import setup
 
-# The long description is copied from README.txt
+# The long description is copied from README.rst
 # from line 4 to the previous line of the Installation section.
-with open('README.txt', 'r') as f:
+with open('README.rst', 'r') as f:
     src_lines = f.readlines()
 copy_lines = []
 for line in src_lines[4:]:
