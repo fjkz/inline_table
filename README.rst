@@ -47,14 +47,14 @@ in the first matched low is returned. ::
     >>> t1.get(A=1, B=2)
     [1, 2, '2']
 
-We can pass variables to a table. ::
+We can pass values to a table. ::
 
     >>> t2 = inline_table.compile_table('''
     ...     === =====
     ...     key value
     ...     === =====
-    ...      1   a
-    ...      2   b
+    ...      1    a
+    ...      2    b
     ...     === =====
     ...     ''',
     ...     a='A', b='B')
@@ -80,6 +80,34 @@ a row including N/A is never returned. ::
         ...
     LookupError: The result is not applicable: query = {'K': 1}
 
+We can give attributes to columns with adding a keyword to the header
+row. Four attribute types in the following table are provided.
+
+========= ========================== ==========================================
+Name      Keyword                    Evaluated as
+========= ========================== ==========================================
+Value     (value), (val), no keyword Python literal
+Condition (condition), (cond)        Conditional statement.
+                                     Use the 1st letter of the label
+String    (string), (str)            String. Not support * and N/A
+Regex     (regex), (re)              Regular expression
+========= ========================== ==========================================
+
+An example. ::
+
+    >>> t4 = inline_table.compile_table('''
+    ...     ========= ============= ========== =========
+    ...     V (value) C (condition) S (string) R (regex)
+    ...     ========= ============= ========== =========
+    ...         1         C < 0        abc     r'[0-9]+'
+    ...         2         C >= 0        *      r'[a-z]+'
+    ...     ========= ============= ========== =========
+    ...     ''')
+    >>> t4.get(C=-1, R='012')
+    [1, -1, 'abc', '012']
+    >>> t4.get(C=1, R='abc')
+    [2, 1, '*', 'abc']
+
 Installation
 ============
 
@@ -91,7 +119,7 @@ Requirements
 ============
 
 * Python 2.6, 2.7 or 3.X
-* docutils package 0.13.X
+* docutils package 0.13 or later
 
 License
 =======
