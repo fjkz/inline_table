@@ -3,4 +3,8 @@ python:
   - "2.6"
   - "3.2"
 install: "pip install docutils"
-script: "python test_inline_table.py"
+script:
+  - "python setup.py sdist"
+  - "python setup.py install"
+  - "rst2html.py README.rst > README.html"
+  - "python test_inline_table.py"
