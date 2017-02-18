@@ -113,6 +113,26 @@ class Table:
         assert len(row_values) == len(self.labels)
         self.rows_values.append(row_values)
 
+    def __call__(self, **query):
+        """Called as a function.
+
+        The behavior is as same as ``get`` method.
+
+        :Example:
+
+            >>> f = compile('''
+            ... === ===
+            ...  x   y
+            ... === ===
+            ...  0   1
+            ...  *   0
+            ... === ===''')
+            >>> f(x=0)
+            [0, 1]
+
+        """
+        return self.get(**query)
+
     def get(self, **query):
         """Return the first row that matches with the query.
 
