@@ -113,6 +113,46 @@ class Table:
         assert len(row_values) == len(self.labels)
         self.rows_values.append(row_values)
 
+    def __contains__(self, values):
+        """Check if this table contains given values with in-statements.
+
+        A row contain N/A returns False.
+
+        :Example:
+
+            >>> t = compile('''
+            ... === ===
+            ...  A   B
+            ... === ===
+            ...  1   2
+            ... === ===''')
+            >>> {'A': 1} in t
+            True
+            >>> {'A': 2} in t
+            False
+            >>> (1, 2) in t
+            True
+            >>> [1, 2] in t
+            True
+
+        """
+        if isinstance(values, dict):
+            query = values
+        elif isinstance(values, list) or isinstance(values, tuple):
+            if len(values) != self._num_columns():
+                return False
+            query = {}
+            for i in range(self._num_columns()):
+                query[self.labels[i]] = values[i]
+        else:
+            return False
+
+        try:
+            self.get(**query)
+            return True
+        except LookupError:
+            return False
+
     def __call__(self, **query):
         """Called as a function.
 
