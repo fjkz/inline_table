@@ -22,13 +22,15 @@ The following is a basic example. Compile an ASCII table text with the
 
 """
 
-from __future__ import print_function
 import copy
 import re
 
-from docutils.parsers.rst.tableparser import (
-    SimpleTableParser,
-    TableMarkupError)
+from docutils.parsers.rst.tableparser \
+    import SimpleTableParser as DocutilsSimpleTableParser
+from docutils.parsers.rst.tableparser \
+    import GridTableParser as DocutilsGridTableParser
+from docutils.parsers.rst.tableparser \
+    import TableMarkupError as DocutilsTableMarkupError
 from docutils.statemachine import StringList
 
 __docformat__ = 'reStructuredText'
@@ -38,11 +40,14 @@ __all__ = ('compile', 'Table')
 
 
 def compile(text, **variables):
-    """Compile an ASCII table text to a Table object.
+    """Compile a table text to a Table object.
 
-    The text must be formated with reStructuredText Simple Table.
+    The text must be formated with reStructuredText Simple Table or Grid Table.
 
-    :param text: an ASCII table text
+    Values can be passed to the table with `variables` keyword arguments. They
+    are used when literals in the table are evaluated.
+
+    :param text: an table text
     :param variables: a value passed to the table and its name
     :type text: string
     :type variables: dict
@@ -50,7 +55,10 @@ def compile(text, **variables):
     :rtype Table
     :raise TableMarkupError: the text format is incorrect
     """
-    labels, rows = Parser().parse(text)
+    lines = text.splitlines()
+    lines = strip_lines(lines)
+    fmt = Format.estimate_format(lines)
+    labels, rows = fmt.parse(lines)
     attrs = ['' for _ in range(len(labels))]
 
     # Move '(...)' word from labels to attrs.
@@ -75,6 +83,29 @@ def compile(text, **variables):
             row_evaluated.append(eval_val)
         table._add(row_evaluated)
     return table
+
+
+def strip_lines(lines):
+    """Remove leading/trailing white lines and indents."""
+    # Remove leading white lines.
+    while True:
+        if re.match(r'^\s*$', lines[0]):
+            del lines[0]
+        else:
+            break
+
+    # Remove trailing white lines.
+    while True:
+        if re.match(r'^\s*$', lines[-1]):
+            del lines[-1]
+        else:
+            break
+
+    # Remove indent
+    indent = re.search(r'\S', lines[0]).start()
+    lines = [line[indent:] for line in lines]
+
+    return lines
 
 
 class Table:
@@ -588,97 +619,164 @@ NotApplicable = _NotApplicable()
 """The NotApplicable object. This is unique in the module."""
 
 
-class Parser:
-    """ASCII table parser.
+class Format:
+    """Format of text tables."""
 
-    This class internally uses SimpleTableParser class in docutils module.
-    """
+    @classmethod
+    def estimate_format(cls, lines):
+        """Estimate the format of the table text.
 
-    def parse(self, text):
-        """Parse reStructured SimpleTable.
+        The lines should be removed leading/trailing white lines and indents.
+        Use strip_lines function.
 
-        :param text: ASCII table text
-        :type text: string
-        :return tuple of list of labels and list of row values
-
-        :Example:
-
-            >>> Parser().parse('''
-            ... ==== ====
-            ...  A    B
-            ... ==== ====
-            ...  a1   b1
-            ...  a2   b2
-            ... ==== ====
-            ... ''')
-            (['A', 'B'], [['a1', 'b1'], ['a2', 'b2']])
-
-            >>> Parser().parse('''
-            ... ==== ====
-            ...  A    B
-            ... (a)  (b)
-            ... ==== ====
-            ...  a1   b1
-            ...  a2   b2
-            ... ==== ====
-            ... ''')
-            (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
-
+        :pram lines: lines of the table text
+        :return estimated table format
         """
-        lines = text.splitlines()
+        if Format.REST_SIMPLE_TABLE.can_accept(lines):
+            return Format.REST_SIMPLE_TABLE
+        if Format.REST_GRID_TABLE.can_accept(lines):
+            return Format.REST_GRID_TABLE
+        raise TableMarkupError('The table format is unknown.')
 
-        # Remove leading while lines.
-        while True:
-            if re.match(r'^\s*$', lines[0]):
-                del lines[0]
+    class _ReSTTable:
+        """Sckeleton implementation of reStructuredText tables.
+
+        In this class common logic between _ReSTSimpleTable and _ReSTGridTable
+        is written. Both of them use the docutils package.
+        """
+
+        @classmethod
+        def can_accept(cls, lines, line_pattern):
+            """Check if the first/last line match the pattern."""
+            first_line = lines[0].strip()
+            last_line = lines[-1].strip()
+
+            if (line_pattern.match(first_line) and
+                    line_pattern.match(last_line)):
+                return True
             else:
-                break
+                return False
 
-        # Remove trailing white lines.
-        while True:
-            if re.match(r'^\s*$', lines[-1]):
-                del lines[-1]
-            else:
-                break
+        @classmethod
+        def parse(cls, lines, parser):
+            """Parse a text table."""
+            # See the document of the docutils module and my experiments in
+            # test_inline_table.py for the data structure of the below result.
+            try:
+                data = parser.parse(StringList(lines))
+            except DocutilsTableMarkupError as e:
+                raise TableMarkupError(e)
 
-        # Remove indent
-        indent = lines[0].find('=')
-        if indent < 0:
-            raise TableMarkupError
-        lines = [line[indent:] for line in lines]
-
-        # See the document of the docutils module and my experiments in
-        # test_inline_table.py for the data structure of the below result.
-        data = SimpleTableParser().parse(StringList(lines))
-
-        # === ===
-        #  a   b   <- these
-        #  c   d
-        # === ===
-        #  e   f
-        # === ===
-        labels = [' '.join(c[3]).strip() for c in data[1][0]]
-
-        if len(data[1]) >= 2:
             # === ===
-            #  a   b
-            #  c   d   <- these
+            #  a   b   <- these
+            #  c   d
             # === ===
             #  e   f
             # === ===
-            for row in data[1][1:]:
-                for i, cell in enumerate(row):
-                    labels[i] += ' ' + ' '.join(cell[3])
-            labels = [s.strip() for s in labels]
+            labels = [' '.join(c[3]).strip() for c in data[1][0]]
 
-        # === ===
-        #  a   b
-        # === ===
-        #  c   d   <- these
-        #  e   f   <-
-        # === ===
-        rows = []
-        for r in data[2]:
-            rows.append([' '.join(c[3]).strip() for c in r])
+            if len(data[1]) >= 2:
+                # === ===
+                #  a   b
+                #  c   d   <- these
+                # === ===
+                #  e   f
+                # === ===
+                for row in data[1][1:]:
+                    for i, cell in enumerate(row):
+                        labels[i] += ' ' + ' '.join(cell[3])
+                labels = [s.strip() for s in labels]
 
-        return labels, rows
+            # === ===
+            #  a   b
+            # === ===
+            #  c   d   <- these
+            #  e   f   <-
+            # === ===
+            rows = []
+            for r in data[2]:
+                rows.append([' '.join(c[3]).strip() for c in r])
+
+            return labels, rows
+
+    class _ReSTSimpleTable:
+        """reStructuredText Simple Table."""
+
+        # Assume the width of cells is larger that 2
+        line_pattern = re.compile(r'^=[= ]*=$')
+
+        def can_accept(self, lines):
+            """Judge if the table is estimated to be this format."""
+            return Format._ReSTTable.can_accept(lines, self.line_pattern)
+
+        def parse(self, lines):
+            r"""Parse reStructuredText SimpleTable.
+
+            :param lines: lines of a table text
+            :type text: string
+            :return tuple of list of labels and list of row values
+
+            :Example:
+
+                >>> Format.REST_SIMPLE_TABLE.parse('''\
+                ... ==== ====
+                ...  A    B
+                ... ==== ====
+                ...  a1   b1
+                ...  a2   b2
+                ... ==== ====
+                ... '''.splitlines())
+                (['A', 'B'], [['a1', 'b1'], ['a2', 'b2']])
+
+                >>> Format.REST_SIMPLE_TABLE.parse('''\
+                ... ==== ====
+                ...  A    B
+                ... (a)  (b)
+                ... ==== ====
+                ...  a1   b1
+                ...  a2   b2
+                ... ==== ====
+                ... '''.splitlines())
+                (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
+
+            """
+            return Format._ReSTTable.parse(lines, DocutilsSimpleTableParser())
+
+    class _ReSTGridTable:
+        """reStructuredText Grid Table."""
+
+        # Assume the width of cells is larger that 2
+        line_pattern = re.compile(r'^\+-[-\+]*-\+$')
+
+        def can_accept(self, lines):
+            """Judge if the table is estimated to be this format."""
+            return Format._ReSTTable.can_accept(lines, self.line_pattern)
+
+        def parse(self, lines):
+            r"""Parse reStructuredText Grid Table.
+
+            :Example:
+
+                >>> Format.REST_GRID_TABLE.parse('''\
+                ... +-----+-----+
+                ... |  A  |  B  |
+                ... | (a) | (b) |
+                ... +=====+=====+
+                ... | a1  | b1  |
+                ... +-----+-----+
+                ... | a2  | b2  |
+                ... +-----+-----+
+                ... '''.splitlines())
+                (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
+
+            """
+            return Format._ReSTTable.parse(lines, DocutilsGridTableParser())
+
+    REST_SIMPLE_TABLE = _ReSTSimpleTable()
+    REST_GRID_TABLE = _ReSTGridTable()
+
+
+class TableMarkupError(Exception):
+    """Error about table text format."""
+
+    pass

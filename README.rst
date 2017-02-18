@@ -22,8 +22,13 @@ Write a simple logic more simply.
 Usage
 =====
 
-Compile an ASCII table text with the ``compile`` function. We can get a `Table`
-object. We currently support only reStructuredText Simple Tables format. ::
+Compile a table text with the ``compile`` function. The table text must be
+formatted with one of the following format:
+
+* reStructuredText Simple Table,
+* reStructuredText Grid Table.
+
+The ``compile`` function returns a ``Table`` object. ::
 
     >>> import inline_table
     >>> t1 = inline_table.compile('''

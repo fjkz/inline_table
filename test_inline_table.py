@@ -4,7 +4,7 @@ import unittest
 
 from docutils.parsers.rst.tableparser import SimpleTableParser
 from docutils.statemachine import StringList
-from inline_table import compile, Table, Parser
+from inline_table import compile, Table, Format
 
 
 class TestDocutils(unittest.TestCase):
@@ -195,54 +195,129 @@ class TestDocutils(unittest.TestCase):
         )
 
 
-class TestParser(unittest.TestCase):
+class TestFormatEstimation(unittest.TestCase):
+
+    def test_simple_table1(self):
+        fmt = Format.estimate_format(['=== ===\n',
+                                      '=== ===\n'])
+        self.assertTrue(fmt is Format.REST_SIMPLE_TABLE)
+
+    def test_simple_table2(self):
+        fmt = Format.estimate_format(['==\n',
+                                      '=='])
+        self.assertTrue(fmt is Format.REST_SIMPLE_TABLE)
+
+    def test_grid_table1(self):
+        fmt = Format.estimate_format(['+---+---+\n',
+                                      '+---+---+\n'])
+        self.assertTrue(fmt is Format.REST_GRID_TABLE)
+
+    def test_grid_table2(self):
+        fmt = Format.estimate_format(['+--+\n',
+                                      '+--+'])
+        self.assertTrue(fmt is Format.REST_GRID_TABLE)
+
+
+class TestSimpleTableParser(unittest.TestCase):
+
+    parser = Format.REST_SIMPLE_TABLE
 
     def test_attrs1(self):
-        ret = Parser().parse('''
-        === ===
-         a   b
-        (A) (B)
-        === ===
-         1   2
-        === ===
-        ''')
+        ret = self.parser.parse('''\
+=== ===
+ a   b
+(A) (B)
+=== ===
+ 1   2
+=== ==='''.splitlines())
         self.assertEqual(ret, (['a (A)', 'b (B)'], [['1', '2']]))
 
     def test_attrs2(self):
-        ret = Parser().parse('''
-        === ===
-         a   b
-        (A)
-        === ===
-         1   2
-        === ===
-        ''')
+        ret = self.parser.parse('''\
+=== ===
+ a   b
+(A)
+=== ===
+ 1   2
+=== ==='''.splitlines())
         self.assertEqual(ret, (['a (A)', 'b'], [['1', '2']]))
 
     def test_attrs3(self):
-        ret = Parser().parse('''
-        === ===
-         a   b
-            (B)
-        === ===
-         1   2
-        === ===
-        ''')
+        ret = self.parser.parse('''\
+=== ===
+ a   b
+    (B)
+=== ===
+ 1   2
+=== ==='''.splitlines())
         self.assertEqual(ret, (['a', 'b (B)'], [['1', '2']]))
 
     def test_two_linebody(self):
-        ret = Parser().parse('''
-        === ===
-         a   b
-        === ===
-         1   2
-             3
-        === ===
-        ''')
+        ret = self.parser.parse('''\
+=== ===
+ a   b
+=== ===
+ 1   2
+     3
+=== ==='''.splitlines())
+        self.assertEqual(ret, (['a', 'b'], [['1', '2 3']]))
+
+
+class TestGridTableParser(unittest.TestCase):
+
+    parser = Format.REST_GRID_TABLE
+
+    def test_attrs1(self):
+        ret = self.parser.parse('''\
++---+---+
+| a | b |
+|(A)|(B)|
++===+===+
+| 1 | 2 |
++---+---+'''.splitlines())
+        self.assertEqual(ret, (['a (A)', 'b (B)'], [['1', '2']]))
+
+    def test_attrs2(self):
+        ret = self.parser.parse('''\
++---+---+
+| a | b |
+|(A)|   |
++===+===+
+| 1 | 2 |
++---+---+'''.splitlines())
+        self.assertEqual(ret, (['a (A)', 'b'], [['1', '2']]))
+
+    def test_attrs3(self):
+        ret = self.parser.parse('''\
++---+---+
+| a | b |
+|   |(B)|
++===+===+
+| 1 | 2 |
++---+---+'''.splitlines())
+        self.assertEqual(ret, (['a', 'b (B)'], [['1', '2']]))
+
+    def test_two_linebody(self):
+        ret = self.parser.parse('''\
++---+---+
+| a | b |
++===+===+
+| 1 | 2 |
+|   | 3 |
++---+---+'''.splitlines())
         self.assertEqual(ret, (['a', 'b'], [['1', '2 3']]))
 
 
 class TestCompile(unittest.TestCase):
+
+    def test_compile_with_format(self):
+        tb = compile('''
+        +---+---+
+        | a | b |
+        +===+===+
+        | 1 | a |
+        +---+---+''', a=1)
+        tb.get(a=1, b=1)
 
     def test_operator(self):
         tb = compile("""
