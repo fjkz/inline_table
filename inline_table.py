@@ -37,7 +37,7 @@ from docutils.statemachine import StringList
 __docformat__ = 'reStructuredText'
 __version__ = '0.0'
 
-__all__ = ('compile', 'Table')
+__all__ = ('compile', 'Table', 'TableMarkupError')
 
 
 def compile(text, **variables):
