@@ -124,16 +124,16 @@ class Table:
 
         :Example:
 
-        >>> t = compile('''
-        ... === =====
-        ... key value
-        ... === =====
-        ... 'A'   1
-        ... 'B'   2
-        ... === =====
-        ... ''')
-        >>> t.get(key='A')
-        ['A', 1]
+            >>> t = compile('''
+            ... === =====
+            ... key value
+            ... === =====
+            ... 'A'   1
+            ... 'B'   2
+            ... === =====
+            ... ''')
+            >>> t.get(key='A')
+            ['A', 1]
 
         """
         # Convert key to index
@@ -185,19 +185,19 @@ class Table:
 
         :Example:
 
-        >>> t = compile('''
-        ... === =====
-        ... key value
-        ... === =====
-        ... 'A'   1
-        ... 'B'   2
-        ... === =====
-        ... ''')
-        >>> r = t.get_with_labels(key='A')
-        >>> r['key']
-        'A'
-        >>> r['value']
-        1
+            >>> t = compile('''
+            ... === =====
+            ... key value
+            ... === =====
+            ... 'A'   1
+            ... 'B'   2
+            ... === =====
+            ... ''')
+            >>> r = t.get_with_labels(key='A')
+            >>> r['key']
+            'A'
+            >>> r['value']
+            1
 
         """
         r = {}
@@ -272,11 +272,11 @@ class Attribute:
 
             :Example:
 
-            >>> f = Attribute.CONDITION.evaluate('v > 0', {}, 'value')
-            >>> f(1)
-            True
-            >>> f(-1)
-            False
+                >>> f = Attribute.CONDITION.evaluate('v > 0', {}, 'value')
+                >>> f(1)
+                True
+                >>> f(-1)
+                False
 
             """
             if expression == WildCard.SYMBOL:
@@ -446,26 +446,26 @@ class Parser:
 
         :Example:
 
-        >>> Parser().parse('''
-        ... ==== ====
-        ...  A    B
-        ... ==== ====
-        ...  a1   b1
-        ...  a2   b2
-        ... ==== ====
-        ... ''')
-        (['A', 'B'], [['a1', 'b1'], ['a2', 'b2']])
+            >>> Parser().parse('''
+            ... ==== ====
+            ...  A    B
+            ... ==== ====
+            ...  a1   b1
+            ...  a2   b2
+            ... ==== ====
+            ... ''')
+            (['A', 'B'], [['a1', 'b1'], ['a2', 'b2']])
 
-        >>> Parser().parse('''
-        ... ==== ====
-        ...  A    B
-        ... (a)  (b)
-        ... ==== ====
-        ...  a1   b1
-        ...  a2   b2
-        ... ==== ====
-        ... ''')
-        (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
+            >>> Parser().parse('''
+            ... ==== ====
+            ...  A    B
+            ... (a)  (b)
+            ... ==== ====
+            ...  a1   b1
+            ...  a2   b2
+            ... ==== ====
+            ... ''')
+            (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
 
         """
         lines = text.splitlines()
