@@ -538,6 +538,65 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(ret1, ['abb', 4])
 
 
+class TestIterable(unittest.TestCase):
+
+    def test_next(self):
+        tb = compile('''
+        ===
+         x
+        ===
+         1
+         2
+        N/A
+         4
+         *
+        ===''')
+        self.assertEqual(tb.next(), [1])
+        self.assertEqual(tb.next(), [2])
+        self.assertEqual(tb.next(), [4])
+        try:
+            tb.next()
+            self.fail()
+        except StopIteration as _ok:
+            pass
+
+    def test_forloop1(self):
+        tb = compile('''
+        === ===
+         x   y
+        === ===
+         1   2
+         2   4
+         3   6
+         4  N/A
+         *   0
+        === ===''')
+        for i, (x, y) in enumerate(tb):
+            self.assertTrue(x * 2 == y)
+        self.assertEqual(i, 2)
+        for i, (x, y) in enumerate(iter(tb)):
+            self.assertTrue(x * 2 == y)
+        self.assertEqual(i, 2)
+
+    def test_forloop2(self):
+        tb = compile('''
+        === ===
+         x   y
+        === ===
+         1  N/A
+         2   4
+         3   6
+         4   8
+         *   0
+        === ===''')
+        for i, (x, y) in enumerate(tb):
+            self.assertTrue(x * 2 == y)
+        self.assertEqual(i, 2)
+        for i, (x, y) in enumerate(iter(tb)):
+            self.assertTrue(x * 2 == y)
+        self.assertEqual(i, 2)
+
+
 if __name__ == '__main__':
     import doctest
     import inline_table

@@ -96,6 +96,8 @@ class Table:
         self.attrs = attrs
         self.rows_values = []
 
+        self.iter_count = -1
+
     def __str__(self):
         """Return Tab separated values."""
         lines = []
@@ -105,6 +107,14 @@ class Table:
             lines.append('\t'.join([repr(c) for c in row]))
         return '\n'.join(lines)
 
+    def _num_columns(self):
+        """Return the number of columns."""
+        return len(self.labels)
+
+    def _num_rows(self):
+        """Return the number of rows."""
+        return len(self.rows_values)
+
     def _add(self, row_values):
         """Add row data.
 
@@ -112,6 +122,93 @@ class Table:
         """
         assert len(row_values) == len(self.labels)
         self.rows_values.append(row_values)
+
+    def __getitem__(self, i):
+        """Return the i-th row.
+
+        If the index of a ``*`` row or ``N/A`` row is assigned, LookupError is
+        raised.
+
+        :param i: index
+        :return list of values in the i-th row
+        :raise LookupError: the index of a ``*`` or ``N/A`` row is assigned
+
+        :Example:
+
+            >>> t = compile('''
+            ... === ===
+            ...  A   B
+            ... === ===
+            ...  1   1
+            ...  2  N/A
+            ... === ===''')
+            >>> t[0]
+            [1, 1]
+            >>> t[1]
+            Traceback (most recent call last):
+                ...
+            LookupError: The 1-th row is not applicable.
+
+        """
+        row = self.rows_values[i]
+        for val in row:
+            if val is WildCard or val is NotApplicable:
+                raise LookupError('The %d-th row is not applicable.' % i)
+        return row
+
+    def __iter__(self):
+        """Return a iterator object."""
+        table = copy.copy(self)
+        table.iter_count = -1
+        return table
+
+    # The next method is for Python 2 and
+    # the __next__ method is for Python 3.
+    def next(self):
+        """Return the next row values.
+
+        A row that contains the wild card or the not-applicable value is
+        skipped.
+
+        :return list of row values
+        :raise StopIteration: the iteration is stopped
+
+        :Example:
+
+            >>> t = compile('''
+            ... === ===
+            ...  A   B
+            ... === ===
+            ...  1   2
+            ...  2  N/A
+            ...  3   6
+            ...  *   0
+            ... === ===''')
+            >>> t.next()
+            [1, 2]
+            >>> t.next()
+            [3, 6]
+            >>> t.next()
+            Traceback (most recent call last):
+                ...
+            StopIteration
+
+        """
+        while True:
+            self.iter_count += 1
+            if self.iter_count >= self._num_rows():
+                raise StopIteration
+            try:
+                return self[self.iter_count]
+            except LookupError:
+                continue
+
+    def __next__(self):
+        """Return the next row values.
+
+        See ``next`` method.
+        """
+        return self.next()
 
     def __contains__(self, values):
         """Check if this table contains given values with in-statements.

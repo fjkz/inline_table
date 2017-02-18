@@ -41,10 +41,12 @@ The literals in the table body are evaluated in the compilation. ``1`` is an
 integer and ``'1'`` is a string.
 
 Search values in the ``Table`` object with the ``get`` method. A list of values
-in the first matched low is returned. ::
+in the first matched row is returned. ::
 
     >>> t1.get(A=1, B=2)
     [1, 2, '2']
+
+Other methods for getting rows are defined. See the pydoc.
 
 We can pass values to a table. ::
 
