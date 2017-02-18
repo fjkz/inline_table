@@ -1,7 +1,7 @@
 """Library for embedding ASCII tables in source-code.
 
-**inline_table** is a Python module for embedding ASCII tables in source-code.
-We can write source-code just like a design document.
+**inline_table** is a Python module for embedding ASCII tables in
+source-code. We can write source-code just like a design document.
 
 The following is a basic example. Compile an ASCII table text with the
 ``compile`` function. And search data with the ``get`` method. ::
@@ -43,17 +43,17 @@ __all__ = ('compile', 'Table', 'TableMarkupError')
 def compile(text, **variables):
     """Compile a table text to a Table object.
 
-    The text must be formated with reStructuredText Simple Table or Grid Table.
+    The text must be formated with reStructuredText Simple Table
+    or Grid Table.
 
-    Values can be passed to the table with `variables` keyword arguments. They
-    are used when literals in the table are evaluated.
+    Values can be passed to the table with the ``variables`` keyword arguments.
+    They are used when literals in the table are evaluated.
 
-    :param text: an table text
-    :param variables: a value passed to the table and its name
+    :param text: a table text
+    :param variables: values passed to the table
     :type text: string
-    :type variables: dict
-    :return a table object
-    :rtype Table
+    :return: a table object
+    :rtype: Table
     :raise TableMarkupError: the text format is incorrect
     """
     lines = text.splitlines()
@@ -162,11 +162,11 @@ class Table:
     def __getitem__(self, i):
         """Return the i-th row.
 
-        If the index of a ``*`` row or ``N/A`` row is assigned, LookupError is
-        raised.
+        If the index of a ``*`` row or a ``N/A`` row is assigned,
+        LookupError is raised.
 
         :param i: index
-        :return values in the i-th row
+        :return: values in the i-th row
         :rtype: named tuple
         :raise LookupError: the index of a ``*`` or ``N/A`` row is assigned
 
@@ -202,13 +202,13 @@ class Table:
     # The next method is for Python 2 and
     # the __next__ method is for Python 3.
     def next(self):
-        """Return the next row values.
+        """Return the next row.
 
         A row that contains the wild card or the not-applicable value is
         skipped.
 
-        :return row values
-        :rtype: named tuple
+        :return: the next row
+        :rtype: Row (named tuple)
         :raise StopIteration: the iteration is stopped
 
         :Example:
@@ -309,12 +309,11 @@ class Table:
         return self.get(**query)
 
     def get(self, **query):
-        """Return the first row that matches with the query.
+        """Return the first row that matches the query.
 
-        :param query: pairs of a label name and value
-        :type query: dict
-        :return list of values
-        :rtype named tuple
+        :param query: pairs of a column label and its value
+        :return: the matched row
+        :rtype: Row (named tuple)
         :raise LookupError: no applicable row is found for the query
 
         :Example:
@@ -341,7 +340,7 @@ class Table:
             queryByIndex.append((i, v))
 
         def _match(values):
-            """Return True if all values match with the query."""
+            """Return True if all values match the query."""
             for i, w in queryByIndex:
                 v = values[i]
                 a = self.attrs[i]
@@ -431,7 +430,7 @@ class Attribute:
             :param variable: name and value pairs
                              that is passed to the expression
             :param label: name of column
-            :return function that takes one argument and returns True/False
+            :return: function that takes one argument and returns True/False
 
             :Example:
 
@@ -605,7 +604,7 @@ class Format:
         Use strip_lines function.
 
         :pram lines: lines of the table text
-        :return estimated table format
+        :return: estimated table format
         """
         if Format.REST_SIMPLE_TABLE.can_accept(lines):
             return Format.REST_SIMPLE_TABLE
@@ -689,7 +688,7 @@ class Format:
 
             :param lines: lines of a table text
             :type text: string
-            :return tuple of list of labels and list of row values
+            :return: tuple of list of labels and list of row values
 
             :Example:
 
@@ -752,6 +751,6 @@ class Format:
 
 
 class TableMarkupError(Exception):
-    """Error about table text format."""
+    """Exception about a table text format."""
 
     pass
