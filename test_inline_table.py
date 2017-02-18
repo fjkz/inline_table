@@ -327,7 +327,7 @@ class TestCompile(unittest.TestCase):
          1   1   1 + 1
         === === ========
         """)
-        ret = tb.get_with_labels(a=1, b=1)["aplusb"]
+        ret = tb.get(a=1, b=1).aplusb
         self.assertEqual(ret, 2)
 
     def test_variable(self):
@@ -340,10 +340,10 @@ class TestCompile(unittest.TestCase):
         === ===
         """, a=1, b=2)
 
-        ret = tb.get_with_labels(A=1)["B"]
+        ret = tb.get(A=1).B
         self.assertEqual(ret, 1)
 
-        ret = tb.get_with_labels(A=2)["B"]
+        ret = tb.get(A=2).B
         self.assertEqual(ret, 2)
 
     def test_builtin(self):
@@ -355,7 +355,7 @@ class TestCompile(unittest.TestCase):
         ======
         """)
         ret = tb.get(A='1')
-        self.assertEqual(ret, ['1'])
+        self.assertEqual(list(ret), ['1'])
 
     def test_variable_leak1(self):
         try:
@@ -397,7 +397,7 @@ class TestQuery(unittest.TestCase):
         """)
 
         ret = tb.get(A=2)
-        self.assertEqual(ret, [2, 2])
+        self.assertEqual(list(ret), [2, 2])
         # Assert WildCard is not included in the returned.
         self.assertEqual([str(v) for v in ret], ['2', '2'])
 
@@ -425,7 +425,7 @@ class TestQuery(unittest.TestCase):
         === ===
         """)
         ret = tb.get(A=1)
-        self.assertEqual(ret, [1, 2])
+        self.assertEqual(list(ret), [1, 2])
 
 
 class TestTable(unittest.TestCase):
@@ -433,7 +433,7 @@ class TestTable(unittest.TestCase):
     def test_labels(self):
         tb = Table(['keyA', 'keyB', 'keyC'])
         ret = tb.labels
-        self.assertEqual(ret, ['keyA', 'keyB', 'keyC'])
+        self.assertEqual(list(ret), ['keyA', 'keyB', 'keyC'])
 
     def test_one_key_no_value(self):
         tb = Table(['key'])
@@ -449,7 +449,7 @@ class TestTable(unittest.TestCase):
 
         ret = tb.get(key='value')
 
-        self.assertEqual(ret, ['value'])
+        self.assertEqual(list(ret), ['value'])
 
     def test_one_key_two_value(self):
         tb = Table(['key'])
@@ -458,7 +458,7 @@ class TestTable(unittest.TestCase):
 
         ret = tb.get(key='value1')
 
-        self.assertEqual(ret, ['value1'])
+        self.assertEqual(list(ret), ['value1'])
 
     def test_two_key_two_value1(self):
         tb = Table(['keyA', 'keyB'])
@@ -467,7 +467,7 @@ class TestTable(unittest.TestCase):
 
         ret = tb.get(keyA='value1A')
 
-        self.assertEqual(ret, ['value1A', 'value1B'])
+        self.assertEqual(list(ret), ['value1A', 'value1B'])
 
     def test_two_key_two_value2(self):
         tb = Table(['keyA', 'keyB'])
@@ -476,16 +476,7 @@ class TestTable(unittest.TestCase):
 
         ret = tb.get(keyB='value2B')
 
-        self.assertEqual(ret, ['value2A', 'value2B'])
-
-    def test_get_with_labels(self):
-        tb = Table(['keyA', 'keyB'])
-        tb._add(['value1A', 'value1B'])
-        tb._add(['value2A', 'value2B'])
-
-        ret = tb.get_with_labels(keyB='value2B')
-
-        self.assertEqual(ret, {'keyA': 'value2A', 'keyB': 'value2B'})
+        self.assertEqual(list(ret), ['value2A', 'value2B'])
 
     def test_incorrect_label(self):
         tb = Table(['keyA', 'keyB'])
@@ -506,7 +497,7 @@ class TestAttrubutes(unittest.TestCase):
              1
             ==========''')
         ret = tb.get(a=1)
-        self.assertEqual(ret, [1])
+        self.assertEqual(list(ret), [1])
 
     def test_value(self):
         tb = compile('''
@@ -518,7 +509,7 @@ class TestAttrubutes(unittest.TestCase):
              2
             =========''')
         ret = tb.get(a=1)
-        self.assertEqual(ret, [1])
+        self.assertEqual(list(ret), [1])
 
     def test_condition(self):
         tb = compile('''
@@ -530,9 +521,9 @@ class TestAttrubutes(unittest.TestCase):
             0 <= a      False
             =========== =====''')
         ret = tb.get(a=-1)
-        self.assertEqual(ret, [-1, True])
+        self.assertEqual(list(ret), [-1, True])
         ret = tb.get(a=1)
-        self.assertEqual(ret, [1, False])
+        self.assertEqual(list(ret), [1, False])
 
     def test_condition_right(self):
         tb = compile('''
@@ -544,9 +535,9 @@ class TestAttrubutes(unittest.TestCase):
             False  b >= 0
             ===== ===========''')
         ret = tb.get(b=-1)
-        self.assertEqual(ret, [True, -1])
+        self.assertEqual(list(ret), [True, -1])
         ret = tb.get(b=1)
-        self.assertEqual(ret, [False, 1])
+        self.assertEqual(list(ret), [False, 1])
 
     def test_consition_wildcard(self):
         tb = compile('''
@@ -558,7 +549,7 @@ class TestAttrubutes(unittest.TestCase):
             *           False
             =========== =====''')
         ret = tb.get(a=1)
-        self.assertEqual(ret, [1, False])
+        self.assertEqual(list(ret), [1, False])
 
     def test_consition_na(self):
         tb = compile('''
@@ -570,7 +561,7 @@ class TestAttrubutes(unittest.TestCase):
             0 <= a      False
             =========== =====''')
         ret = tb.get(a=1)
-        self.assertEqual(ret, [1, False])
+        self.assertEqual(list(ret), [1, False])
 
     def test_cond(self):
         tb = compile('''
@@ -582,7 +573,7 @@ class TestAttrubutes(unittest.TestCase):
             A == 2  2
             ====== ===''')
         ret = tb.get(A=1)
-        self.assertEqual(ret, [1, 1])
+        self.assertEqual(list(ret), [1, 1])
 
     def test_string(self):
         tb = compile('''
@@ -594,7 +585,7 @@ class TestAttrubutes(unittest.TestCase):
             aaaaaaaa bbbbb
             ======== =====''')
         ret = tb.get(A='AAAAAAAA')
-        self.assertEqual(ret, ['AAAAAAAA', 'BBBBB'])
+        self.assertEqual(list(ret), ['AAAAAAAA', 'BBBBB'])
 
     def test_regex(self):
         tb = compile('''
@@ -608,9 +599,9 @@ class TestAttrubutes(unittest.TestCase):
             *        4
             ======== =''')
         ret1 = tb.get(A='aab')
-        self.assertEqual(ret1, ['aab', 1])
-        ret1 = tb.get(A='abb')
-        self.assertEqual(ret1, ['abb', 4])
+        self.assertEqual(list(ret1), ['aab', 1])
+        ret2 = tb.get(A='abb')
+        self.assertEqual(list(ret2), ['abb', 4])
 
 
 class TestIterable(unittest.TestCase):
@@ -626,9 +617,9 @@ class TestIterable(unittest.TestCase):
          4
          *
         ===''')
-        self.assertEqual(tb.next(), [1])
-        self.assertEqual(tb.next(), [2])
-        self.assertEqual(tb.next(), [4])
+        self.assertEqual(list(tb.next()), [1])
+        self.assertEqual(list(tb.next()), [2])
+        self.assertEqual(list(tb.next()), [4])
         try:
             tb.next()
             self.fail()

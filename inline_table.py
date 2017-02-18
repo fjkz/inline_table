@@ -18,10 +18,11 @@ The following is a basic example. Compile an ASCII table text with the
     ... ====== ======= ====== ======
     ... ''')
     >>> t.get(state='stop', event='accel')
-    ['stop', 'accel', 'run', 'move']
+    Row(state='stop', event='accel', next='run', action='move')
 
 """
 
+import collections
 import copy
 import re
 
@@ -120,6 +121,10 @@ class Table:
         :type attrs: list of Attribute. The default is VALUE.
         """
         self.labels = labels
+        # Create a type of named tuple.
+        # The type name Row is proper?
+        self.namedtuple = collections.namedtuple('Row', labels)
+
         if attrs:
             assert len(labels) == len(attrs)
         else:
@@ -161,7 +166,8 @@ class Table:
         raised.
 
         :param i: index
-        :return list of values in the i-th row
+        :return values in the i-th row
+        :rtype: named tuple
         :raise LookupError: the index of a ``*`` or ``N/A`` row is assigned
 
         :Example:
@@ -174,7 +180,7 @@ class Table:
             ...  2  N/A
             ... === ===''')
             >>> t[0]
-            [1, 1]
+            Row(A=1, B=1)
             >>> t[1]
             Traceback (most recent call last):
                 ...
@@ -185,7 +191,7 @@ class Table:
         for val in row:
             if val is WildCard or val is NotApplicable:
                 raise LookupError('The %d-th row is not applicable.' % i)
-        return row
+        return self.namedtuple(*row)
 
     def __iter__(self):
         """Return a iterator object."""
@@ -201,7 +207,8 @@ class Table:
         A row that contains the wild card or the not-applicable value is
         skipped.
 
-        :return list of row values
+        :return row values
+        :rtype: named tuple
         :raise StopIteration: the iteration is stopped
 
         :Example:
@@ -216,9 +223,9 @@ class Table:
             ...  *   0
             ... === ===''')
             >>> t.next()
-            [1, 2]
+            Row(A=1, B=2)
             >>> t.next()
-            [3, 6]
+            Row(A=3, B=6)
             >>> t.next()
             Traceback (most recent call last):
                 ...
@@ -296,7 +303,7 @@ class Table:
             ...  *   0
             ... === ===''')
             >>> f(x=0)
-            [0, 1]
+            Row(x=0, y=1)
 
         """
         return self.get(**query)
@@ -307,7 +314,7 @@ class Table:
         :param query: pairs of a label name and value
         :type query: dict
         :return list of values
-        :rtype list
+        :rtype named tuple
         :raise LookupError: no applicable row is found for the query
 
         :Example:
@@ -321,7 +328,7 @@ class Table:
             ... === =====
             ... ''')
             >>> t.get(key='A')
-            ['A', 1]
+            Row(key='A', value=1)
 
         """
         # Convert key to index
@@ -357,42 +364,10 @@ class Table:
             values = copy.copy(values)
             for j, v in queryByIndex:
                 values[j] = v
-            return values
+            return self.namedtuple(*values)
 
         # If no row is matched
         raise LookupError("No row is found for the query: %s" % query)
-
-    def get_with_labels(self, **query):
-        """Return the matched row with labels.
-
-        :param query: pairs of a label name and value
-        :type query: dict
-        :return pairs of a label name and value
-        :rtype dict
-        :raise LookupError: no applicable row is found for the query
-
-        :Example:
-
-            >>> t = compile('''
-            ... === =====
-            ... key value
-            ... === =====
-            ... 'A'   1
-            ... 'B'   2
-            ... === =====
-            ... ''')
-            >>> r = t.get_with_labels(key='A')
-            >>> r['key']
-            'A'
-            >>> r['value']
-            1
-
-        """
-        r = {}
-        result = self.get(**query)
-        for i, v in enumerate(result):
-            r[self.labels[i]] = v
-        return r
 
 
 class Attribute:
