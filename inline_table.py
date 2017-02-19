@@ -63,27 +63,28 @@ def compile(text, **variables):
     lines = strip_lines(lines)
     fmt = Format.estimate_format(lines)
     labels, rows = fmt.parse(lines)
-    attrs = ['' for _ in range(len(labels))]
+    column_types = ['' for _ in range(len(labels))]
 
-    # Move '(...)' word from labels to attrs.
+    # Move '(...)' word from labels to column_types.
     # e.g.,
-    # label = 'a', attr = '(a)'  --> label = 'a', attr = '(a)'
-    # label = 'a(a)', attr = ''  --> label = 'a', attr = '(a)'
+    # label = 'a', column_type = '(a)'  --> label = 'a', column_type = '(a)'
+    # label = 'a(a)', column_type = ''  --> label = 'a', column_type = '(a)'
     pattern = re.compile(r'([a-zA-Z_]+[0-9_]*) *(\([a-zA-Z0-9_]*\))')
     for i, s in enumerate(labels):
         match = pattern.match(s)
         if match:
-            labels[i], attrs[i] = match.group(1, 2)
+            labels[i], column_types[i] = match.group(1, 2)
 
-    enum_attrs = [Attribute.get_attr(a) for a in attrs]
-    table = Table(labels, enum_attrs)
+    # Convert strings to ColumnType values
+    column_types = [ColumnType.get_column_type(a) for a in column_types]
+    table = Table(labels, column_types)
     for row in rows:
         # Evaluate the literal in each cell with given variables.
         row_evaluated = []
         for i, cell in enumerate(row):
-            attr = enum_attrs[i]
+            column_type = column_types[i]
             label = labels[i]
-            eval_val = attr.evaluate(cell, variables, label)
+            eval_val = column_type.evaluate(cell, variables, label)
             row_evaluated.append(eval_val)
         table._add(row_evaluated)
     return table
@@ -120,22 +121,20 @@ def strip_lines(lines):
 class Table:
     """Table data structure."""
 
-    def __init__(self, labels, attrs=None):
+    def __init__(self, labels, column_types=None):
         """Initialize the object.
 
         :param labels: list of label names
-        :param attrs: list of column attributes
-        :type labels: list of strings
-        :type attrs: list of Attribute. The default is VALUE.
+        :param column_types: list of column types
         """
         # Create a type of named tuple.
         # We name the type name as 'Tuple'. Traditionally, the row of
         # relational database is called tuple and it has attributes.
         self.Tuple = collections.namedtuple('Tuple', labels)
 
-        if not attrs:
-            attrs = [Attribute.VALUE for _ in range(len(labels))]
-        self.attrs = self.Tuple(*attrs)
+        if not column_types:
+            column_types = [ColumnType.VALUE for _ in range(len(labels))]
+        self.column_types = self.Tuple(*column_types)
         self.rows = []
 
         self.iter_count = -1
@@ -144,7 +143,7 @@ class Table:
         """Return Tab separated values."""
         lines = []
         lines.append('\t'.join(self._labels))
-        lines.append('\t'.join([str(a) for a in self.attrs]))
+        lines.append('\t'.join([str(a) for a in self.column_types]))
         for row in self.rows:
             lines.append('\t'.join([repr(c) for c in row]))
         return '\n'.join(lines)
@@ -157,7 +156,7 @@ class Table:
     @property
     def _num_columns(self):
         """Return the number of columns."""
-        return len(self.attrs)
+        return len(self.column_types)
 
     @property
     def _num_rows(self):
@@ -317,8 +316,8 @@ class Table:
             """Return True if all values in the row match the query."""
             for label, query_value in query.items():
                 row_value = getattr(row, label)
-                column_attr = getattr(self.attrs, label)
-                if not column_attr.match(row_value, query_value):
+                column_type = getattr(self.column_types, label)
+                if not column_type.match(row_value, query_value):
                     return False
             return True
 
@@ -342,11 +341,11 @@ class Table:
         raise LookupError("No row is found for the query: %s" % query)
 
 
-class Attribute:
-    """Enum of attributes for columns."""
+class ColumnType:
+    """Type objects for columns."""
 
     @classmethod
-    def get_attr(cls, symbol):
+    def get_column_type(cls, symbol):
         if symbol in cls.VALUE.ALT_SYMBOLS:
             return cls.VALUE
         if symbol in cls.CONDITION.ALT_SYMBOLS:
@@ -360,7 +359,7 @@ class Attribute:
     class _Value:
         """Raw values.
 
-        This attribute is default.
+        This column type is default.
         """
 
         SYMBOL = '(value)'
@@ -407,7 +406,7 @@ class Attribute:
 
             :Example:
 
-                >>> f = Attribute.CONDITION.evaluate('v > 0', {}, 'value')
+                >>> f = ColumnType.CONDITION.evaluate('v > 0', {}, 'value')
                 >>> f(1)
                 True
                 >>> f(-1)
@@ -430,10 +429,10 @@ class Attribute:
     class _String:
         """Strings.
 
-        Data with this attribute is not evaluated as Python literals.
+        Data in this type column is not evaluated as Python literals.
 
         The wild card and the non-applicable value is not used for this
-        attribute.
+        column type.
         """
 
         SYMBOL = '(string)'
@@ -453,7 +452,7 @@ class Attribute:
         """Regular expression.
 
         The wild card and the non-applicable value is not used for this
-        attribute.
+        column type.
         """
 
         SYMBOL = '(regex)'
