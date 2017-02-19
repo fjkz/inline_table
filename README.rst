@@ -1,8 +1,8 @@
 ===============================================================================
-    inline_table - Python module for embedding ASCII tables in source-code
+    inline_table - Python module for embedding text tables into source-code
 ===============================================================================
 
-**inline_table** is a Python module for embedding ASCII tables in source-code.
+**inline_table** is a Python module for embedding text tables into source-code.
 
 Table is a good notation. It is simple and easy to read. We can see if we
 concern about all cases MECE-ly or not. We create many tables as software

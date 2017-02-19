@@ -27,7 +27,7 @@ classifiers=[
 
 setup(name='inline_table',
       version='0.0',
-      description='Library for embedding ASCII tables in source-code',
+      description='Library for embedding text tables into source-code',
       long_description=long_description,
       author='Kazuho Fujii',
       author_email='kazuho.fujii@gmail.com',

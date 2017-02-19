@@ -1,9 +1,9 @@
-"""Library for embedding ASCII tables in source-code.
+"""Library for embedding text tables in source-code.
 
-**inline_table** is a Python module for embedding ASCII tables in
+**inline_table** is a Python module for embedding text tables in
 source-code. We can write source-code just like a design document.
 
-The following is a basic example. Compile an ASCII table text with the
+The following is a basic example. Compile an text table text with the
 ``compile`` function. And search data with the ``get`` method. ::
 
     >>> import inline_table
@@ -486,7 +486,7 @@ class ColumnType:
 class _WildCard:
     """An object that equals with any value.
 
-    The wild card is represented in the ASCII table text with '*'.
+    The wild card is represented with '*' in table texts.
 
     In the module this object is used from ``WildCard`` variable,
     do not create a object directly.
@@ -526,7 +526,7 @@ WildCard = _WildCard()
 class _NotApplicable:
     """The non-applicable value.
 
-    The non-applicable value is represented in the ASCII table text with 'N/A'.
+    The non-applicable value is represented with 'N/A' in table texts.
 
     The object does not equal with any value.
 
