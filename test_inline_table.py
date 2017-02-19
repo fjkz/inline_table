@@ -217,6 +217,36 @@ class TestFormatEstimation(unittest.TestCase):
                                       '+--+'])
         self.assertTrue(fmt is Format.REST_GRID_TABLE)
 
+    def test_markdown1(self):
+        fmt = Format.estimate_format(['| a | b |\n',
+                                      '|---|---|\n',
+                                      '| c | d |\n'])
+        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+
+    def test_markdown2(self):
+        fmt = Format.estimate_format(['| a | b |\n',
+                                      '| - | - |\n',
+                                      '| c | d |\n'])
+        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+
+    def test_markdown3(self):
+        fmt = Format.estimate_format(['| a | b |\n',
+                                      '|:- | -:|\n',
+                                      '| c | d |\n'])
+        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+
+    def test_markdown4(self):
+        fmt = Format.estimate_format([' a | b \n',
+                                      '---|---\n',
+                                      ' c | d \n'])
+        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+
+    def test_markdown5(self):
+        fmt = Format.estimate_format(['a | b | c \n',
+                                      ':--- |:--- |: ---\n',
+                                      'c | d | e \n'])
+        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+
 
 class TestSimpleTableParser(unittest.TestCase):
 
@@ -308,6 +338,32 @@ class TestGridTableParser(unittest.TestCase):
         self.assertEqual(ret, (['a', 'b'], [['1', '2 3']]))
 
 
+class TestMarkdownParser(unittest.TestCase):
+
+    parser = Format.MARKDOWN_TABLE
+
+    def test_not_pretty(self):
+        ret = self.parser.parse('''\
+A | B | C |
+---|:---|---:
+a | b | c
+1 | 2 | 3
+'''.splitlines())
+        self.assertEqual(
+            ret,
+            (['A', 'B', 'C'], [['a', 'b', 'c'], ['1', '2', '3']]))
+
+    def test_no_space(self):
+        ret = self.parser.parse('''\
+|A|B|
+|-|-|
+|1|2|
+'''.splitlines())
+        self.assertEqual(
+            ret,
+            (['A', 'B'], [['1', '2']]))
+
+
 class TestCompile(unittest.TestCase):
 
     def test_compile_with_format(self):
@@ -382,6 +438,24 @@ class TestCompile(unittest.TestCase):
             self.fail()
         except NameError as _ok:
             pass
+
+    def test_markdown1(self):
+        t = compile('''
+        | A | B | C | D |
+        |---|---|---|---|
+        | 1 | 2 | 3 | 4 |
+        ''')
+        ret = t.get(A=1)
+        self.assertEqual(list(ret), [1, 2, 3, 4])
+
+    def test_markdown2(self):
+        t = compile('''
+          A | B | C | D
+         ---|---|---|---
+          1 | 2 | 3 | 4
+        ''')
+        ret = t.get(A=1)
+        self.assertEqual(list(ret), [1, 2, 3, 4])
 
 
 class TestQuery(unittest.TestCase):

@@ -43,8 +43,11 @@ __all__ = ('compile', 'Table', 'TableMarkupError')
 def compile(text, **variables):
     """Compile a table text to a Table object.
 
-    The text must be formated with reStructuredText Simple Table
-    or Grid Table.
+    The following formats are supported:
+
+    * reStructuredText Simple Table,
+    * reStructuredText Grid Table,
+    * Markdown Table.
 
     Values can be passed to the table with the ``variables`` keyword arguments.
     They are used when literals in the table are evaluated.
@@ -102,8 +105,13 @@ def strip_lines(lines):
         else:
             break
 
-    # Remove indent
-    indent = re.search(r'\S', lines[0]).start()
+    # Remove indent.
+    # Count whitespaces of 1st and 2nd row, and regard the smaller one is
+    # the indent width. The reason to see the 2nd row is for the case of
+    # Markdown table without side '|'s.
+    indent0 = re.search(r'\S', lines[0]).start()  # 1st row
+    indent1 = re.search(r'\S', lines[1]).start()  # 2nd row
+    indent = min(indent0, indent1)
     lines = [line[indent:] for line in lines]
 
     return lines
@@ -606,10 +614,12 @@ class Format:
         :pram lines: lines of the table text
         :return: estimated table format
         """
-        if Format.REST_SIMPLE_TABLE.can_accept(lines):
-            return Format.REST_SIMPLE_TABLE
-        if Format.REST_GRID_TABLE.can_accept(lines):
-            return Format.REST_GRID_TABLE
+        for fmt in (Format.REST_SIMPLE_TABLE,
+                    Format.REST_GRID_TABLE,
+                    Format.MARKDOWN_TABLE):
+            if fmt.can_accept(lines):
+                return fmt
+
         raise TableMarkupError('The table format is unknown.')
 
     class _ReSTTable:
@@ -740,8 +750,49 @@ class Format:
             """
             return Format._ReSTTable.parse(lines, DocutilsGridTableParser())
 
+    class _MarkdownTable:
+        """Markdown Table."""
+
+        def can_accept(self, lines):
+            """Judge if the table is estimated to be this format."""
+            if re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]):
+                return True
+            else:
+                return False
+
+        @classmethod
+        def __split_cell(cls, line):
+            # Remove leading |
+            line = re.sub(r'^ *\| *', '', line)
+            # Remove trailing |
+            line = re.sub(r' *\| *$', '', line)
+            # Split at |
+            cells = re.split(r' *\| *', line)
+            # Strip
+            cells = [cell.strip() for cell in cells]
+            return cells
+
+        def parse(self, lines):
+            r"""Parse a Markdown table.
+
+            :Example:
+
+                >>> Format.MARKDOWN_TABLE.parse('''\
+                ... |  A  |  B  |  C  |
+                ... |-----|:--- | ---:|
+                ... |  a  |  b  |  c  |
+                ... |  1  |  2  |  3  |
+                ... '''.splitlines())
+                (['A', 'B', 'C'], [['a', 'b', 'c'], ['1', '2', '3']])
+
+            """
+            header = self.__split_cell(lines[0])
+            body = [self.__split_cell(line) for line in lines[2:]]
+            return header, body
+
     REST_SIMPLE_TABLE = _ReSTSimpleTable()
     REST_GRID_TABLE = _ReSTGridTable()
+    MARKDOWN_TABLE = _MarkdownTable()
 
 
 class TableMarkupError(Exception):

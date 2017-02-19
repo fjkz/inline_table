@@ -23,10 +23,11 @@ Usage
 =====
 
 Compile a table text with the ``compile`` function. The table text must be
-formatted with one of the following format:
+formatted with one of the following formats:
 
 * reStructuredText Simple Table,
-* reStructuredText Grid Table.
+* reStructuredText Grid Table,
+* Markdown Table.
 
 The ``compile`` function returns a ``Table`` object. ::
 
