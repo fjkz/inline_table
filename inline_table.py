@@ -171,40 +171,6 @@ class Table:
         """
         self.rows.append(self.Tuple(*row_values))
 
-    def __getitem__(self, i):
-        """Return the i-th row.
-
-        If the index of a ``*`` row or a ``N/A`` row is assigned,
-        LookupError is raised.
-
-        :param i: index
-        :return: values in the i-th row
-        :rtype: named tuple
-        :raise LookupError: the index of a ``*`` or ``N/A`` row is assigned
-
-        :Example:
-
-            >>> t = compile('''
-            ... === ===
-            ...  A   B
-            ... === ===
-            ...  1   1
-            ...  2  N/A
-            ... === ===''')
-            >>> t[0]
-            Tuple(A=1, B=1)
-            >>> t[1]
-            Traceback (most recent call last):
-                ...
-            LookupError: The 1-th row is not applicable.
-
-        """
-        row = self.rows[i]
-        for val in row:
-            if val is WildCard or val is NotApplicable:
-                raise LookupError('The %d-th row is not applicable.' % i)
-        return row
-
     def __iter__(self):
         """Return a iterator object."""
         table = copy.copy(self)
@@ -248,10 +214,14 @@ class Table:
             self.iter_count += 1
             if self.iter_count >= self._num_rows:
                 raise StopIteration
-            try:
-                return self[self.iter_count]
-            except LookupError:
-                continue
+            row = self.rows[self.iter_count]
+            na = False
+            for val in row:
+                if val is WildCard or val is NotApplicable:
+                    na = True
+                    break
+            if not na:
+                return row
 
     def __next__(self):
         """Return the next row values.
