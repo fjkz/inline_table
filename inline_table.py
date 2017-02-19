@@ -622,11 +622,11 @@ class Format:
         @classmethod
         def can_accept(cls, lines, line_pattern):
             """Check if the first/last line match the pattern."""
-            first_line = lines[0].strip()
-            last_line = lines[-1].strip()
+            first_line = lines[0]
+            last_line = lines[-1]
 
-            if (line_pattern.match(first_line) and
-                    line_pattern.match(last_line)):
+            if (re.match(line_pattern, first_line) and
+                    re.match(line_pattern, last_line)):
                 return True
             else:
                 return False
@@ -676,12 +676,9 @@ class Format:
     class _ReSTSimpleTable:
         """reStructuredText Simple Table."""
 
-        # Assume the width of cells is larger that 2
-        line_pattern = re.compile(r'^=[= ]*=$')
-
         def can_accept(self, lines):
             """Judge if the table is estimated to be this format."""
-            return Format._ReSTTable.can_accept(lines, self.line_pattern)
+            return Format._ReSTTable.can_accept(lines, r'^ *[= ]*= *$')
 
         def parse(self, lines):
             r"""Parse reStructuredText SimpleTable.
@@ -719,12 +716,9 @@ class Format:
     class _ReSTGridTable:
         """reStructuredText Grid Table."""
 
-        # Assume the width of cells is larger that 2
-        line_pattern = re.compile(r'^\+-[-\+]*-\+$')
-
         def can_accept(self, lines):
             """Judge if the table is estimated to be this format."""
-            return Format._ReSTTable.can_accept(lines, self.line_pattern)
+            return Format._ReSTTable.can_accept(lines, r'^ *\+[-\+]*-\+ *$')
 
         def parse(self, lines):
             r"""Parse reStructuredText Grid Table.
