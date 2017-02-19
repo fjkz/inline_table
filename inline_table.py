@@ -128,44 +128,47 @@ class Table:
         :type labels: list of strings
         :type attrs: list of Attribute. The default is VALUE.
         """
-        self.labels = labels
         # Create a type of named tuple.
         # The type name Row is proper?
-        self.namedtuple = collections.namedtuple('Row', labels)
+        self.Row = collections.namedtuple('Row', labels)
 
-        if attrs:
-            assert len(labels) == len(attrs)
-        else:
+        if not attrs:
             attrs = [Attribute.VALUE for _ in range(len(labels))]
-        self.attrs = attrs
-        self.rows_values = []
+        self.attrs = self.Row(*attrs)
+        self.rows = []
 
         self.iter_count = -1
 
     def __str__(self):
         """Return Tab separated values."""
         lines = []
-        lines.append('\t'.join(self.labels))
+        lines.append('\t'.join(self._labels))
         lines.append('\t'.join([str(a) for a in self.attrs]))
-        for row in self.rows_values:
+        for row in self.rows:
             lines.append('\t'.join([repr(c) for c in row]))
         return '\n'.join(lines)
 
+    @property
+    def _labels(self):
+        """Return labels."""
+        return self.column_types._fields
+
+    @property
     def _num_columns(self):
         """Return the number of columns."""
-        return len(self.labels)
+        return len(self.attrs)
 
+    @property
     def _num_rows(self):
         """Return the number of rows."""
-        return len(self.rows_values)
+        return len(self.rows)
 
     def _add(self, row_values):
         """Add row data.
 
-        :param row_values: list of values in cells
+        :param row_values: list of values in a row
         """
-        assert len(row_values) == len(self.labels)
-        self.rows_values.append(row_values)
+        self.rows.append(self.Row(*row_values))
 
     def __getitem__(self, i):
         """Return the i-th row.
@@ -195,11 +198,11 @@ class Table:
             LookupError: The 1-th row is not applicable.
 
         """
-        row = self.rows_values[i]
+        row = self.rows[i]
         for val in row:
             if val is WildCard or val is NotApplicable:
                 raise LookupError('The %d-th row is not applicable.' % i)
-        return self.namedtuple(*row)
+        return row
 
     def __iter__(self):
         """Return a iterator object."""
@@ -242,7 +245,7 @@ class Table:
         """
         while True:
             self.iter_count += 1
-            if self.iter_count >= self._num_rows():
+            if self.iter_count >= self._num_rows:
                 raise StopIteration
             try:
                 return self[self.iter_count]
@@ -282,11 +285,12 @@ class Table:
         if isinstance(values, dict):
             query = values
         elif isinstance(values, list) or isinstance(values, tuple):
-            if len(values) != self._num_columns():
+            if len(values) != self._num_columns:
                 return False
             query = {}
-            for i in range(self._num_columns()):
-                query[self.labels[i]] = values[i]
+            for i in range(self._num_columns):
+                label = self._labels[i]
+                query[label] = values[i]
         else:
             return False
 
@@ -338,40 +342,30 @@ class Table:
             Row(key='A', value=1)
 
         """
-        # Convert key to index
-        queryByIndex = []
-        for k, v in query.items():
-            try:
-                i = self.labels.index(k)
-            except ValueError:
-                raise LookupError("The label '%s' is incorrect" % k)
-            queryByIndex.append((i, v))
-
-        def _match(values):
-            """Return True if all values match the query."""
-            for i, w in queryByIndex:
-                v = values[i]
-                a = self.attrs[i]
-                if not a.match(v, w):
+        def _match(row):
+            """Return True if all values in the row match the query."""
+            for label, query_value in query.items():
+                row_value = getattr(row, label)
+                column_attr = getattr(self.attrs, label)
+                if not column_attr.match(row_value, query_value):
                     return False
             return True
 
-        for i, values in enumerate(self.rows_values):
-            if not _match(values):
+        for row in self.rows:
+            if not _match(row):
                 continue
-            # matched
 
             # If the row is N/A raise an error.
-            if NotApplicable in values:
+            if NotApplicable in row:
                 raise LookupError(
                     "The result is not applicable: query = %s" % query)
 
             # Overwrite with the values in the query
             # for excepting the wild card.
-            values = copy.copy(values)
-            for j, v in queryByIndex:
-                values[j] = v
-            return self.namedtuple(*values)
+            for label, value in query.items():
+                kv = {label: value}
+                row = row._replace(**kv)
+            return row
 
         # If no row is matched
         raise LookupError("No row is found for the query: %s" % query)

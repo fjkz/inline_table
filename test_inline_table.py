@@ -506,7 +506,7 @@ class TestTable(unittest.TestCase):
 
     def test_labels(self):
         tb = Table(['keyA', 'keyB', 'keyC'])
-        ret = tb.labels
+        ret = tb._labels
         self.assertEqual(list(ret), ['keyA', 'keyB', 'keyC'])
 
     def test_one_key_no_value(self):
