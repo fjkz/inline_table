@@ -50,7 +50,7 @@ Search values in the ``Table`` object with the ``get`` method. A named tuple of
 the first matched row is returned. ::
 
     >>> t1.get(A=1, B=2)
-    Row(A=1, B=2, AB='2')
+    Tuple(A=1, B=2, AB='2')
 
 Other methods for getting rows are defined. See the pydoc.
 
@@ -66,7 +66,7 @@ We can pass values to a table. ::
     ...     ''',
     ...     a='A', b='B')
     >>> t2.get(key=1)
-    Row(key=1, value='A')
+    Tuple(key=1, value='A')
 
 The wild card and the not-applicable value are provided. We can write them
 respectively with ``*`` and ``N/A``. The wild card matches with any query, and
@@ -81,7 +81,7 @@ a row including N/A is never returned. ::
     ...     === ===
     ...     ''')
     >>> t3.get(K=2)
-    Row(K=2, V=1)
+    Tuple(K=2, V=1)
     >>> t3.get(K=1)
     Traceback (most recent call last):
         ...
@@ -111,9 +111,9 @@ An example. ::
     ...     ========= ============= ========== =========
     ...     ''')
     >>> t4.get(C=-1, R='012')
-    Row(V=1, C=-1, S='abc', R='012')
+    Tuple(V=1, C=-1, S='abc', R='012')
     >>> t4.get(C=1, R='abc')
-    Row(V=2, C=1, S='*', R='abc')
+    Tuple(V=2, C=1, S='*', R='abc')
 
 Installation
 ============

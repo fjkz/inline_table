@@ -18,7 +18,7 @@ The following is a basic example. Compile an ASCII table text with the
     ... ====== ======= ====== ======
     ... ''')
     >>> t.get(state='stop', event='accel')
-    Row(state='stop', event='accel', next='run', action='move')
+    Tuple(state='stop', event='accel', next='run', action='move')
 
 """
 
@@ -129,12 +129,13 @@ class Table:
         :type attrs: list of Attribute. The default is VALUE.
         """
         # Create a type of named tuple.
-        # The type name Row is proper?
-        self.Row = collections.namedtuple('Row', labels)
+        # We name the type name as 'Tuple'. Traditionally, the row of
+        # relational database is called tuple and it has attributes.
+        self.Tuple = collections.namedtuple('Tuple', labels)
 
         if not attrs:
             attrs = [Attribute.VALUE for _ in range(len(labels))]
-        self.attrs = self.Row(*attrs)
+        self.attrs = self.Tuple(*attrs)
         self.rows = []
 
         self.iter_count = -1
@@ -168,7 +169,7 @@ class Table:
 
         :param row_values: list of values in a row
         """
-        self.rows.append(self.Row(*row_values))
+        self.rows.append(self.Tuple(*row_values))
 
     def __getitem__(self, i):
         """Return the i-th row.
@@ -191,7 +192,7 @@ class Table:
             ...  2  N/A
             ... === ===''')
             >>> t[0]
-            Row(A=1, B=1)
+            Tuple(A=1, B=1)
             >>> t[1]
             Traceback (most recent call last):
                 ...
@@ -219,7 +220,7 @@ class Table:
         skipped.
 
         :return: the next row
-        :rtype: Row (named tuple)
+        :rtype: Tuple (named tuple)
         :raise StopIteration: the iteration is stopped
 
         :Example:
@@ -234,9 +235,9 @@ class Table:
             ...  *   0
             ... === ===''')
             >>> t.next()
-            Row(A=1, B=2)
+            Tuple(A=1, B=2)
             >>> t.next()
-            Row(A=3, B=6)
+            Tuple(A=3, B=6)
             >>> t.next()
             Traceback (most recent call last):
                 ...
@@ -315,7 +316,7 @@ class Table:
             ...  *   0
             ... === ===''')
             >>> f(x=0)
-            Row(x=0, y=1)
+            Tuple(x=0, y=1)
 
         """
         return self.get(**query)
@@ -325,7 +326,7 @@ class Table:
 
         :param query: pairs of a column label and its value
         :return: the matched row
-        :rtype: Row (named tuple)
+        :rtype: Tuple (named tuple)
         :raise LookupError: no applicable row is found for the query
 
         :Example:
@@ -339,7 +340,7 @@ class Table:
             ... === =====
             ... ''')
             >>> t.get(key='A')
-            Row(key='A', value=1)
+            Tuple(key='A', value=1)
 
         """
         def _match(row):
