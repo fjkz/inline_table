@@ -373,7 +373,7 @@ class TestCompile(unittest.TestCase):
         +===+===+
         | 1 | a |
         +---+---+''', a=1)
-        tb.get(a=1, b=1)
+        tb.select(a=1, b=1)
 
     def test_operator(self):
         tb = compile("""
@@ -383,7 +383,7 @@ class TestCompile(unittest.TestCase):
          1   1   1 + 1
         === === ========
         """)
-        ret = tb.get(a=1, b=1).aplusb
+        ret = tb.select(a=1, b=1).aplusb
         self.assertEqual(ret, 2)
 
     def test_variable(self):
@@ -396,10 +396,10 @@ class TestCompile(unittest.TestCase):
         === ===
         """, a=1, b=2)
 
-        ret = tb.get(A=1).B
+        ret = tb.select(A=1).B
         self.assertEqual(ret, 1)
 
-        ret = tb.get(A=2).B
+        ret = tb.select(A=2).B
         self.assertEqual(ret, 2)
 
     def test_builtin(self):
@@ -410,7 +410,7 @@ class TestCompile(unittest.TestCase):
         str(1)
         ======
         """)
-        ret = tb.get(A='1')
+        ret = tb.select(A='1')
         self.assertEqual(list(ret), ['1'])
 
     def test_variable_leak1(self):
@@ -445,7 +445,7 @@ class TestCompile(unittest.TestCase):
         |---|---|---|---|
         | 1 | 2 | 3 | 4 |
         ''')
-        ret = t.get(A=1)
+        ret = t.select(A=1)
         self.assertEqual(list(ret), [1, 2, 3, 4])
 
     def test_markdown2(self):
@@ -454,7 +454,7 @@ class TestCompile(unittest.TestCase):
          ---|---|---|---
           1 | 2 | 3 | 4
         ''')
-        ret = t.get(A=1)
+        ret = t.select(A=1)
         self.assertEqual(list(ret), [1, 2, 3, 4])
 
 
@@ -470,7 +470,7 @@ class TestQuery(unittest.TestCase):
         === ===
         """)
 
-        ret = tb.get(A=2)
+        ret = tb.select(A=2)
         self.assertEqual(list(ret), [2, 2])
         # Assert WildCard is not included in the returned.
         self.assertEqual([str(v) for v in ret], ['2', '2'])
@@ -484,7 +484,7 @@ class TestQuery(unittest.TestCase):
         === ===
         """)
         try:
-            tb.get(A=1)
+            tb.select(A=1)
             self.fail()
         except LookupError as _ok:
             pass
@@ -498,7 +498,7 @@ class TestQuery(unittest.TestCase):
          1   2
         === ===
         """)
-        ret = tb.get(A=1)
+        ret = tb.select(A=1)
         self.assertEqual(list(ret), [1, 2])
 
 
@@ -512,50 +512,50 @@ class TestTable(unittest.TestCase):
     def test_one_key_no_value(self):
         tb = Table(['key'])
         try:
-            tb.get(key='value')
+            tb.select(key='value')
             self.fail()
         except LookupError as _ok:
             pass
 
     def test_one_key_one_value(self):
         tb = Table(['key'])
-        tb._add(['value'])
+        tb._insert(['value'])
 
-        ret = tb.get(key='value')
+        ret = tb.select(key='value')
 
         self.assertEqual(list(ret), ['value'])
 
     def test_one_key_two_value(self):
         tb = Table(['key'])
-        tb._add(['value1'])
-        tb._add(['value2'])
+        tb._insert(['value1'])
+        tb._insert(['value2'])
 
-        ret = tb.get(key='value1')
+        ret = tb.select(key='value1')
 
         self.assertEqual(list(ret), ['value1'])
 
     def test_two_key_two_value1(self):
         tb = Table(['keyA', 'keyB'])
-        tb._add(['value1A', 'value1B'])
-        tb._add(['value2A', 'value2B'])
+        tb._insert(['value1A', 'value1B'])
+        tb._insert(['value2A', 'value2B'])
 
-        ret = tb.get(keyA='value1A')
+        ret = tb.select(keyA='value1A')
 
         self.assertEqual(list(ret), ['value1A', 'value1B'])
 
     def test_two_key_two_value2(self):
         tb = Table(['keyA', 'keyB'])
-        tb._add(['value1A', 'value1B'])
-        tb._add(['value2A', 'value2B'])
+        tb._insert(['value1A', 'value1B'])
+        tb._insert(['value2A', 'value2B'])
 
-        ret = tb.get(keyB='value2B')
+        ret = tb.select(keyB='value2B')
 
         self.assertEqual(list(ret), ['value2A', 'value2B'])
 
     def test_incorrect_label(self):
         tb = Table(['keyA', 'keyB'])
         try:
-            tb.get(keyC=1)
+            tb.select(keyC=1)
             self.fail()
         except LookupError as _ok:
             pass
@@ -570,7 +570,7 @@ class TestAttrubutes(unittest.TestCase):
             ==========
              1
             ==========''')
-        ret = tb.get(a=1)
+        ret = tb.select(a=1)
         self.assertEqual(list(ret), [1])
 
     def test_value(self):
@@ -582,7 +582,7 @@ class TestAttrubutes(unittest.TestCase):
              1
              2
             =========''')
-        ret = tb.get(a=1)
+        ret = tb.select(a=1)
         self.assertEqual(list(ret), [1])
 
     def test_condition(self):
@@ -594,9 +594,9 @@ class TestAttrubutes(unittest.TestCase):
             a < 0       True
             0 <= a      False
             =========== =====''')
-        ret = tb.get(a=-1)
+        ret = tb.select(a=-1)
         self.assertEqual(list(ret), [-1, True])
-        ret = tb.get(a=1)
+        ret = tb.select(a=1)
         self.assertEqual(list(ret), [1, False])
 
     def test_condition_right(self):
@@ -608,9 +608,9 @@ class TestAttrubutes(unittest.TestCase):
             True   b < 0
             False  b >= 0
             ===== ===========''')
-        ret = tb.get(b=-1)
+        ret = tb.select(b=-1)
         self.assertEqual(list(ret), [True, -1])
-        ret = tb.get(b=1)
+        ret = tb.select(b=1)
         self.assertEqual(list(ret), [False, 1])
 
     def test_consition_wildcard(self):
@@ -622,7 +622,7 @@ class TestAttrubutes(unittest.TestCase):
             a < 0       True
             *           False
             =========== =====''')
-        ret = tb.get(a=1)
+        ret = tb.select(a=1)
         self.assertEqual(list(ret), [1, False])
 
     def test_consition_na(self):
@@ -634,7 +634,7 @@ class TestAttrubutes(unittest.TestCase):
             N/A         True
             0 <= a      False
             =========== =====''')
-        ret = tb.get(a=1)
+        ret = tb.select(a=1)
         self.assertEqual(list(ret), [1, False])
 
     def test_cond(self):
@@ -646,7 +646,7 @@ class TestAttrubutes(unittest.TestCase):
             A == 1  1
             A == 2  2
             ====== ===''')
-        ret = tb.get(A=1)
+        ret = tb.select(A=1)
         self.assertEqual(list(ret), [1, 1])
 
     def test_string(self):
@@ -658,7 +658,7 @@ class TestAttrubutes(unittest.TestCase):
             AAAAAAAA BBBBB
             aaaaaaaa bbbbb
             ======== =====''')
-        ret = tb.get(A='AAAAAAAA')
+        ret = tb.select(A='AAAAAAAA')
         self.assertEqual(list(ret), ['AAAAAAAA', 'BBBBB'])
 
     def test_regex(self):
@@ -672,9 +672,9 @@ class TestAttrubutes(unittest.TestCase):
             N/A      3
             *        4
             ======== =''')
-        ret1 = tb.get(A='aab')
+        ret1 = tb.select(A='aab')
         self.assertEqual(list(ret1), ['aab', 1])
-        ret2 = tb.get(A='abb')
+        ret2 = tb.select(A='abb')
         self.assertEqual(list(ret2), ['abb', 4])
 
 

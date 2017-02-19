@@ -46,10 +46,10 @@ The ``compile`` function returns a ``Table`` object. ::
 The literals in the table body are evaluated in the compilation. ``1`` is an
 integer and ``'1'`` is a string.
 
-Search values in the ``Table`` object with the ``get`` method. A named tuple of
+Search values in the ``Table`` object with the ``select`` method. A named tuple of
 the first matched row is returned. ::
 
-    >>> t1.get(A=1, B=2)
+    >>> t1.select(A=1, B=2)
     Tuple(A=1, B=2, AB='2')
 
 Other methods for getting rows are defined. See the pydoc.
@@ -65,12 +65,12 @@ We can pass values to a table. ::
     ...     === =====
     ...     ''',
     ...     a='A', b='B')
-    >>> t2.get(key=1)
+    >>> t2.select(key=1)
     Tuple(key=1, value='A')
 
 The wild card and the not-applicable value are provided. We can write them
-respectively with ``*`` and ``N/A``. The wild card matches with any query, and
-a row including N/A is never returned. ::
+respectively with ``*`` and ``N/A``. The wild card matches any value, and a
+row including N/A is never returned. ::
 
     >>> t3 = inline_table.compile('''
     ...     === ===
@@ -80,12 +80,12 @@ a row including N/A is never returned. ::
     ...      *   1
     ...     === ===
     ...     ''')
-    >>> t3.get(K=2)
+    >>> t3.select(K=2)
     Tuple(K=2, V=1)
-    >>> t3.get(K=1)
+    >>> t3.select(K=1)
     Traceback (most recent call last):
         ...
-    LookupError: The result is not applicable: query = {'K': 1}
+    LookupError: The result is not applicable. condition: {'K': 1}
 
 We can specify a column type with adding a keyword to the header
 row. Four column types in the following table are provided.
@@ -110,9 +110,9 @@ An example. ::
     ...         2         C >= 0        *      r'[a-z]+'
     ...     ========= ============= ========== =========
     ...     ''')
-    >>> t4.get(C=-1, R='012')
+    >>> t4.select(C=-1, R='012')
     Tuple(V=1, C=-1, S='abc', R='012')
-    >>> t4.get(C=1, R='abc')
+    >>> t4.select(C=1, R='abc')
     Tuple(V=2, C=1, S='*', R='abc')
 
 Installation

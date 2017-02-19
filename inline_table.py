@@ -4,7 +4,7 @@
 source-code. We can write source-code just like a design document.
 
 The following is a basic example. Compile an text table text with the
-``compile`` function. And search data with the ``get`` method. ::
+``compile`` function. And get a row data with the ``select`` method. ::
 
     >>> import inline_table
     >>> t = inline_table.compile('''
@@ -17,7 +17,7 @@ The following is a basic example. Compile an text table text with the
     ... 'run'  'brake' 'stop'  None
     ... ====== ======= ====== ======
     ... ''')
-    >>> t.get(state='stop', event='accel')
+    >>> t.select(state='stop', event='accel')
     Tuple(state='stop', event='accel', next='run', action='move')
 
 """
@@ -86,7 +86,7 @@ def compile(text, **variables):
             label = labels[i]
             eval_val = column_type.evaluate(cell, variables, label)
             row_evaluated.append(eval_val)
-        table._add(row_evaluated)
+        table._insert(row_evaluated)
     return table
 
 
@@ -163,7 +163,7 @@ class Table:
         """Return the number of rows."""
         return len(self.rows)
 
-    def _add(self, row_values):
+    def _insert(self, row_values):
         """Add row data.
 
         :param row_values: list of values in a row
@@ -253,27 +253,27 @@ class Table:
 
         """
         if isinstance(values, dict):
-            query = values
+            condition = values
         elif isinstance(values, list) or isinstance(values, tuple):
             if len(values) != self._num_columns:
                 return False
-            query = {}
+            condition = {}
             for i in range(self._num_columns):
                 label = self._labels[i]
-                query[label] = values[i]
+                condition[label] = values[i]
         else:
             return False
 
         try:
-            self.get(**query)
+            self.select(**condition)
             return True
         except LookupError:
             return False
 
-    def __call__(self, **query):
+    def __call__(self, **condition):
         """Called as a function.
 
-        The behavior is as same as ``get`` method.
+        The behavior is as same as ``select`` method.
 
         :Example:
 
@@ -288,15 +288,15 @@ class Table:
             Tuple(x=0, y=1)
 
         """
-        return self.get(**query)
+        return self.select(**condition)
 
-    def get(self, **query):
-        """Return the first row that matches the query.
+    def select(self, **condition):
+        """Return the first row that matches the condition.
 
-        :param query: pairs of a column label and its value
+        :param condition: pairs of a column label and its value
         :return: the matched row
         :rtype: Tuple (named tuple)
-        :raise LookupError: no applicable row is found for the query
+        :raise LookupError: no applicable row is found for the condition
 
         :Example:
 
@@ -308,16 +308,16 @@ class Table:
             ... 'B'   2
             ... === =====
             ... ''')
-            >>> t.get(key='A')
+            >>> t.select(key='A')
             Tuple(key='A', value=1)
 
         """
         def _match(row):
-            """Return True if all values in the row match the query."""
-            for label, query_value in query.items():
+            """Return True if all values in the row match the condition."""
+            for label, condition_value in condition.items():
                 row_value = getattr(row, label)
                 column_type = getattr(self.column_types, label)
-                if not column_type.match(row_value, query_value):
+                if not column_type.match(row_value, condition_value):
                     return False
             return True
 
@@ -328,17 +328,17 @@ class Table:
             # If the row is N/A raise an error.
             if NotApplicable in row:
                 raise LookupError(
-                    "The result is not applicable: query = %s" % query)
+                    "The result is not applicable. condition: %s" % condition)
 
-            # Overwrite with the values in the query
+            # Overwrite with the values in the condition
             # for excepting the wild card.
-            for label, value in query.items():
+            for label, value in condition.items():
                 kv = {label: value}
                 row = row._replace(**kv)
             return row
 
         # If no row is matched
-        raise LookupError("No row is found for the query: %s" % query)
+        raise LookupError("No row is found for the condition: %s" % condition)
 
 
 class ColumnType:
