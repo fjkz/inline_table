@@ -4,7 +4,8 @@ import unittest
 
 from docutils.parsers.rst.tableparser import SimpleTableParser
 from docutils.statemachine import StringList
-from inline_table import compile, Table, Format, TableMarkupError, ColumnType
+from inline_table import *
+from inline_table import Format, ColumnType, WildCard
 
 
 class TestDocutils(unittest.TestCase):
@@ -627,13 +628,14 @@ class TestUnion(unittest.TestCase):
             | 3 | 6 |
             | 4 | 8 |''')
         t3 = t1.union(t2)
-        ret = list(next(t3))
+        it = iter(t3)
+        ret = list(next(it))
         self.assertEqual(ret, [1, 2])
-        ret = list(next(t3))
+        ret = list(next(it))
         self.assertEqual(ret, [2, 4])
-        ret = list(next(t3))
+        ret = list(next(it))
         self.assertEqual(ret, [3, 6])
-        ret = list(next(t3))
+        ret = list(next(it))
         self.assertEqual(ret, [4, 8])
 
     def test_plus_operator(self):
@@ -648,13 +650,14 @@ class TestUnion(unittest.TestCase):
             | 3 | 6 |
             | 4 | 8 |''')
         t3 = t1 + t2
-        ret = list(next(t3))
+        it = iter(t3)
+        ret = list(next(it))
         self.assertEqual(ret, [1, 2])
-        ret = list(next(t3))
+        ret = list(next(it))
         self.assertEqual(ret, [2, 4])
-        ret = list(next(t3))
+        ret = list(next(it))
         self.assertEqual(ret, [3, 6])
-        ret = list(next(t3))
+        ret = list(next(it))
         self.assertEqual(ret, [4, 8])
 
     def test_width_diff(self):
@@ -822,11 +825,13 @@ class TestIterable(unittest.TestCase):
          4
          *
         ===''')
-        self.assertEqual(list(tb.next()), [1])
-        self.assertEqual(list(tb.next()), [2])
-        self.assertEqual(list(tb.next()), [4])
+        it = iter(tb)
+        self.assertEqual(list(next(it)), [1])
+        self.assertEqual(list(next(it)), [2])
+        self.assertEqual(list(next(it)), [4])
+        self.assertTrue(next(it)[0] is WildCard)
         try:
-            tb.next()
+            next(it)
             self.fail()
         except StopIteration as _ok:
             pass
@@ -843,11 +848,17 @@ class TestIterable(unittest.TestCase):
          *   0
         === ===''')
         for i, (x, y) in enumerate(tb):
-            self.assertTrue(x * 2 == y)
-        self.assertEqual(i, 2)
-        for i, (x, y) in enumerate(iter(tb)):
-            self.assertTrue(x * 2 == y)
-        self.assertEqual(i, 2)
+            if x is WildCard:
+                self.assertEqual(y, 0)
+            else:
+                self.assertTrue(x * 2 == y)
+        self.assertEqual(i, 3)
+        for i, (x, y) in enumerate(tb):
+            if x is WildCard:
+                self.assertEqual(y, 0)
+            else:
+                self.assertTrue(x * 2 == y)
+        self.assertEqual(i, 3)
 
     def test_forloop2(self):
         tb = compile('''
@@ -861,11 +872,11 @@ class TestIterable(unittest.TestCase):
          *   0
         === ===''')
         for i, (x, y) in enumerate(tb):
-            self.assertTrue(x * 2 == y)
-        self.assertEqual(i, 2)
-        for i, (x, y) in enumerate(iter(tb)):
-            self.assertTrue(x * 2 == y)
-        self.assertEqual(i, 2)
+            if x is WildCard:
+                self.assertEqual(y, 0)
+            else:
+                self.assertTrue(x * 2 == y)
+        self.assertEqual(i, 3)
 
 
 if __name__ == '__main__':

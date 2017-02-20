@@ -137,8 +137,6 @@ class Table:
         self.column_types = self.Tuple(*column_types)
         self.rows = []
 
-        self.iter_count = -1
-
     def __str__(self):
         """Return Tab separated values."""
         lines = []
@@ -171,22 +169,9 @@ class Table:
         self.rows.append(self.Tuple(*row_values))
 
     def __iter__(self):
-        """Return a iterator object."""
-        table = copy.copy(self)
-        table.iter_count = -1
-        return table
+        """Return a iterator object.
 
-    # The next method is for Python 2 and
-    # the __next__ method is for Python 3.
-    def next(self):
-        """Return the next row.
-
-        A row that contains the wild card or the not-applicable value is
-        skipped.
-
-        :return: the next row
-        :rtype: Tuple (named tuple)
-        :raise StopIteration: the iteration is stopped
+        A row that contains the not-applicable value is skipped.
 
         :Example:
 
@@ -199,35 +184,21 @@ class Table:
             ...  3   6
             ...  *   0
             ... === ===''')
-            >>> t.next()
+            >>> i = iter(t)
+            >>> next(i)
             Tuple(A=1, B=2)
-            >>> t.next()
+            >>> next(i)
             Tuple(A=3, B=6)
-            >>> t.next()
+            >>> next(i)
+            Tuple(A=WildCard, B=0)
+            >>> next(i)
             Traceback (most recent call last):
                 ...
             StopIteration
 
         """
-        while True:
-            self.iter_count += 1
-            if self.iter_count >= self._num_rows:
-                raise StopIteration
-            row = self.rows[self.iter_count]
-            na = False
-            for val in row:
-                if val is WildCard or val is NotApplicable:
-                    na = True
-                    break
-            if not na:
-                return row
-
-    def __next__(self):
-        """Return the next row values.
-
-        See ``next`` method.
-        """
-        return self.next()
+        # Almost as same as select_all()
+        return self.__select(condition={}, raise_error=False)
 
     def __contains__(self, values):
         """Check if this table contains given values with in-statements.
@@ -421,7 +392,6 @@ class Table:
                     format_column_types(other.column_types)))
 
         new_table = copy.copy(self)
-        new_table.iter_count = -1
         for row in other.rows:
             new_table._insert(row)
         return new_table
