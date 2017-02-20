@@ -87,18 +87,18 @@ row including N/A is never returned. ::
         ...
     LookupError: The result is not applicable. condition: {'K': 1}
 
-We can specify a column type with adding a keyword to the header
+We can specify a column type with adding a directive to the header
 row. Four column types in the following table are provided.
 
-=========== ========================== ===============================
-Column Type Keyword                    Evaluated as
-=========== ========================== ===============================
-Value       (value), (val), no keyword Python literal
-Condition   (condition), (cond)        Conditional statement.
-                                       Use the 1st letter of the label
-String      (string), (str)            String. Not support * and N/A
-Regex       (regex), (re)              Regular expression
-=========== ========================== ===============================
+=========== ============================ ===============================
+Column Type Directive                    Evaluated As
+=========== ============================ ===============================
+Value       (value), (val), no directive Python literal
+Condition   (condition), (cond)          Conditional statement.
+                                         Use the 1st letter of the label
+String      (string), (str)              String. Not support * and N/A
+Regex       (regex), (re)                Regular expression
+=========== ============================ ===============================
 
 An example. ::
 

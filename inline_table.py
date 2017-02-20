@@ -345,16 +345,16 @@ class ColumnType:
     """Type objects for columns."""
 
     @classmethod
-    def get_column_type(cls, symbol):
-        if symbol in cls.VALUE.ALT_SYMBOLS:
+    def get_column_type(cls, directive):
+        if directive in cls.VALUE.ALT_DIRECTIVES:
             return cls.VALUE
-        if symbol in cls.CONDITION.ALT_SYMBOLS:
+        if directive in cls.CONDITION.ALT_DIRECTIVES:
             return cls.CONDITION
-        if symbol in cls.STRING.ALT_SYMBOLS:
+        if directive in cls.STRING.ALT_DIRECTIVES:
             return cls.STRING
-        if symbol in cls.REGEX.ALT_SYMBOLS:
+        if directive in cls.REGEX.ALT_DIRECTIVES:
             return cls.REGEX
-        raise TableMarkupError("Unknown symbol '%s'" % symbol)
+        raise TableMarkupError("Invalid directive '%s'" % directive)
 
     class _Value:
         """Raw values.
@@ -362,17 +362,17 @@ class ColumnType:
         This column type is default.
         """
 
-        SYMBOL = '(value)'
-        ALT_SYMBOLS = (SYMBOL, '(val)', '')  # Empty string is here.
+        DIRECTIVE = '(value)'
+        ALT_DIRECTIVES = (DIRECTIVE, '(val)', '')  # Empty string is here.
 
         def __str__(self):
-            return self.SYMBOL
+            return self.DIRECTIVE
 
         def evaluate(self, expression, variables, label):
             """Evaluate a string in the table cell."""
-            if expression == WildCard.SYMBOL:
+            if expression == WildCard.DIRECTIVE:
                 return WildCard
-            if expression == NotApplicable.SYMBOL:
+            if expression == NotApplicable.DIRECTIVE:
                 return NotApplicable
             return eval(expression, variables)
 
@@ -385,11 +385,11 @@ class ColumnType:
         Data in a condition column is converted to functions.
         """
 
-        SYMBOL = '(condition)'
-        ALT_SYMBOLS = (SYMBOL, '(cond)')
+        DIRECTIVE = '(condition)'
+        ALT_DIRECTIVES = (DIRECTIVE, '(cond)')
 
         def __str__(self):
-            return self.SYMBOL
+            return self.DIRECTIVE
 
         def evaluate(self, expression, variables, label):
             """Return a function that checks if a value matches.
@@ -413,9 +413,9 @@ class ColumnType:
                 False
 
             """
-            if expression == WildCard.SYMBOL:
+            if expression == WildCard.DIRECTIVE:
                 return WildCard
-            if expression == NotApplicable.SYMBOL:
+            if expression == NotApplicable.DIRECTIVE:
                 return NotApplicable
 
             # Use first letter as symbol
@@ -435,11 +435,11 @@ class ColumnType:
         column type.
         """
 
-        SYMBOL = '(string)'
-        ALT_SYMBOLS = (SYMBOL, '(str)')
+        DIRECTIVE = '(string)'
+        ALT_DIRECTIVES = (DIRECTIVE, '(str)')
 
         def __str__(self):
-            return self.SYMBOL
+            return self.DIRECTIVE
 
         def evaluate(self, expression, variables, label):
             # No wild card and N/A
@@ -455,16 +455,16 @@ class ColumnType:
         column type.
         """
 
-        SYMBOL = '(regex)'
-        ALT_SYMBOLS = (SYMBOL, '(re)')
+        DIRECTIVE = '(regex)'
+        ALT_DIRECTIVES = (DIRECTIVE, '(re)')
 
         def __str__(self):
-            return self.SYMBOL
+            return self.DIRECTIVE
 
         def evaluate(self, expression, variables, label):
-            if expression == WildCard.SYMBOL:
+            if expression == WildCard.DIRECTIVE:
                 return WildCard
-            if expression == NotApplicable.SYMBOL:
+            if expression == NotApplicable.DIRECTIVE:
                 return NotApplicable
 
             # Evaluate as Python literals and compile as a regular expression.
@@ -492,7 +492,7 @@ class _WildCard:
     do not create a object directly.
     """
 
-    SYMBOL = '*'
+    DIRECTIVE = '*'
 
     def __eq__(self, other):
         """Return True for any object."""
@@ -512,7 +512,7 @@ class _WildCard:
 
     def __str__(self):
         """Return '*'."""
-        return self.SYMBOL
+        return self.DIRECTIVE
 
     def __repr__(self):
         """Return 'WildCard'."""
@@ -534,7 +534,7 @@ class _NotApplicable:
     do not create a object directly.
     """
 
-    SYMBOL = 'N/A'
+    DIRECTIVE = 'N/A'
 
     def __eq__(self, other):
         """Return False for any object."""
@@ -554,7 +554,7 @@ class _NotApplicable:
 
     def __str__(self):
         """Return 'N/A'."""
-        return self.SYMBOL
+        return self.DIRECTIVE
 
     def __repr__(self):
         """Return 'NotApplicable'."""

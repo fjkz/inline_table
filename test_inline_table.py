@@ -4,7 +4,7 @@ import unittest
 
 from docutils.parsers.rst.tableparser import SimpleTableParser
 from docutils.statemachine import StringList
-from inline_table import compile, Table, Format
+from inline_table import compile, Table, Format, TableMarkupError
 
 
 class TestDocutils(unittest.TestCase):
@@ -456,6 +456,17 @@ class TestCompile(unittest.TestCase):
         ''')
         ret = t.select(A=1)
         self.assertEqual(list(ret), [1, 2, 3, 4])
+
+    def test_invalid_directive(self):
+        try:
+            t = compile('''
+                | A (foo) |
+                |---------|
+                | a       |
+                ''')
+            self.fail()
+        except TableMarkupError as _ok:
+            pass
 
 
 class TestQuery(unittest.TestCase):
