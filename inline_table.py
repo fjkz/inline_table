@@ -348,19 +348,63 @@ class Table:
             "No row is found for the condition: " +
             format_condition(condition))
 
+    def union(self, other):
+        """Concatenate two tables.
+
+        Two tables must have the same width, the same labels and
+        the same type columns.
+
+        Tables can be concatenated also with ``+`` operator.
+
+        :param table: table to be concat
+        :return: concatenated table
+        :raise TypeError: width, labels or columns types are different
+        """
+        if self._num_columns != other._num_columns:
+            raise TypeError(
+                "Width of the tables are different: %d != %d" % (
+                    self._num_columns, other._num_columns))
+
+        if self._labels != other._labels:
+            raise TypeError(
+                "Labels of the tables are different: %s != %s" % (
+                    str(self._labels), str(other._labels)))
+
+        if self.column_types != other.column_types:
+            def format_column_types(column_types):
+                return '(%s)' % ', '.join([str(t) for t in column_types])
+
+            raise TypeError(
+                "Column types of the tables are different: %s != %s" % (
+                    format_column_types(self.column_types),
+                    format_column_types(other.column_types)))
+
+        new_table = copy.copy(self)
+        new_table.iter_count = -1
+        for row in other.rows:
+            new_table._insert(row)
+        return new_table
+
+    def __add__(self, other):
+        """Concatenate two tables.
+
+        This is a syntax sugar of the ``union`` method.
+        """
+        return self.union(other)
+
 
 class ColumnType:
     """Type objects for columns."""
 
     @classmethod
     def get_column_type(cls, directive):
-        if directive in cls.VALUE.ALT_DIRECTIVES:
+        if directive in cls.VALUE.DIRECTIVES:
             return cls.VALUE
-        if directive in cls.CONDITION.ALT_DIRECTIVES:
+        if directive in cls.CONDITION.DIRECTIVES:
             return cls.CONDITION
-        if directive in cls.STRING.ALT_DIRECTIVES:
+        if directive in cls.STRING.DIRECTIVES:
             return cls.STRING
-        if directive in cls.REGEX.ALT_DIRECTIVES:
+        if directive in cls.REGEX.DIRECTIVES:
             return cls.REGEX
         raise TableMarkupError("Invalid directive '%s'" % directive)
 
@@ -370,11 +414,10 @@ class ColumnType:
         This column type is default.
         """
 
-        DIRECTIVE = '(value)'
-        ALT_DIRECTIVES = (DIRECTIVE, '(val)', '')  # Empty string is here.
+        DIRECTIVES = ('(value)', '(val)', '')  # Empty string is here.
 
         def __str__(self):
-            return self.DIRECTIVE
+            return 'value'
 
         def evaluate(self, expression, variables, label):
             """Evaluate a string in the table cell."""
@@ -393,11 +436,10 @@ class ColumnType:
         Data in a condition column is converted to functions.
         """
 
-        DIRECTIVE = '(condition)'
-        ALT_DIRECTIVES = (DIRECTIVE, '(cond)')
+        DIRECTIVES = ('(condition)', '(cond)')
 
         def __str__(self):
-            return self.DIRECTIVE
+            return 'condition'
 
         def evaluate(self, expression, variables, label):
             """Return a function that checks if a value matches.
@@ -443,11 +485,10 @@ class ColumnType:
         column type.
         """
 
-        DIRECTIVE = '(string)'
-        ALT_DIRECTIVES = (DIRECTIVE, '(str)')
+        DIRECTIVES = ('(string)', '(str)')
 
         def __str__(self):
-            return self.DIRECTIVE
+            return 'string'
 
         def evaluate(self, expression, variables, label):
             # No wild card and N/A
@@ -463,11 +504,10 @@ class ColumnType:
         column type.
         """
 
-        DIRECTIVE = '(regex)'
-        ALT_DIRECTIVES = (DIRECTIVE, '(re)')
+        DIRECTIVES = ('(regex)', '(re)')
 
         def __str__(self):
-            return self.DIRECTIVE
+            return 'regex'
 
         def evaluate(self, expression, variables, label):
             if expression == WildCard.DIRECTIVE:

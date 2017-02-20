@@ -4,7 +4,7 @@ import unittest
 
 from docutils.parsers.rst.tableparser import SimpleTableParser
 from docutils.statemachine import StringList
-from inline_table import compile, Table, Format, TableMarkupError
+from inline_table import compile, Table, Format, TableMarkupError, ColumnType
 
 
 class TestDocutils(unittest.TestCase):
@@ -570,6 +570,85 @@ class TestTable(unittest.TestCase):
             self.fail()
         except LookupError as _ok:
             pass
+
+
+class TestUnion(unittest.TestCase):
+
+    def test_union(self):
+        t1 = compile('''
+            | A | B |
+            |---|---|
+            | 1 | 2 |
+            | 2 | 4 |''')
+        t2 = compile('''
+            | A | B |
+            |---|---|
+            | 3 | 6 |
+            | 4 | 8 |''')
+        t3 = t1.union(t2)
+        ret = list(next(t3))
+        self.assertEqual(ret, [1, 2])
+        ret = list(next(t3))
+        self.assertEqual(ret, [2, 4])
+        ret = list(next(t3))
+        self.assertEqual(ret, [3, 6])
+        ret = list(next(t3))
+        self.assertEqual(ret, [4, 8])
+
+    def test_plus_operator(self):
+        t1 = compile('''
+            | A | B |
+            |---|---|
+            | 1 | 2 |
+            | 2 | 4 |''')
+        t2 = compile('''
+            | A | B |
+            |---|---|
+            | 3 | 6 |
+            | 4 | 8 |''')
+        t3 = t1 + t2
+        ret = list(next(t3))
+        self.assertEqual(ret, [1, 2])
+        ret = list(next(t3))
+        self.assertEqual(ret, [2, 4])
+        ret = list(next(t3))
+        self.assertEqual(ret, [3, 6])
+        ret = list(next(t3))
+        self.assertEqual(ret, [4, 8])
+
+    def test_width_diff(self):
+        t1 = Table(['a', 'b'])
+        t2 = Table(['a', 'b', 'c'])
+        try:
+            t1 + t2
+            self.fail()
+        except TypeError as e:
+            self.assertEqual(
+                str(e),
+                "Width of the tables are different: 2 != 3")
+
+    def test_labels_diff(self):
+        t1 = Table(['a', 'b'])
+        t2 = Table(['a', 'c'])
+        try:
+            t1 + t2
+            self.fail()
+        except TypeError as e:
+            self.assertEqual(
+                str(e),
+                "Labels of the tables are different: ('a', 'b') != ('a', 'c')")
+
+    def test_column_types_diff(self):
+        t1 = Table(['a', 'b'], [ColumnType.VALUE, ColumnType.CONDITION])
+        t2 = Table(['a', 'b'], [ColumnType.VALUE, ColumnType.STRING])
+        try:
+            t1 + t2
+            self.fail()
+        except TypeError as e:
+            self.assertEqual(
+                str(e),
+                ('Column types of the tables are different: '
+                 '(value, condition) != (value, string)'))
 
 
 class TestAttrubutes(unittest.TestCase):
