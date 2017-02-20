@@ -85,7 +85,7 @@ row including N/A is never returned. ::
     >>> t3.select(K=1)
     Traceback (most recent call last):
         ...
-    LookupError: The result is not applicable. condition: {'K': 1}
+    LookupError: The result for the condition is not applicable: K=1
 
 We can specify a column type with adding a directive to the header
 row. Four column types in the following table are provided.

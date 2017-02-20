@@ -312,7 +312,12 @@ class Table:
             Tuple(key='A', value=1)
 
         """
-        def _match(row):
+        def format_condition(condition):
+            """Format condition value to 'key1=a, key2=b' style."""
+            return ', '.join(
+                [key + '=' + repr(value) for key, value in condition.items()])
+
+        def match(row):
             """Return True if all values in the row match the condition."""
             for label, condition_value in condition.items():
                 row_value = getattr(row, label)
@@ -322,13 +327,14 @@ class Table:
             return True
 
         for row in self.rows:
-            if not _match(row):
+            if not match(row):
                 continue
 
             # If the row is N/A raise an error.
             if NotApplicable in row:
                 raise LookupError(
-                    "The result is not applicable. condition: %s" % condition)
+                    "The result for the condition is not applicable: " +
+                    format_condition(condition))
 
             # Overwrite with the values in the condition
             # for excepting the wild card.
@@ -338,7 +344,9 @@ class Table:
             return row
 
         # If no row is matched
-        raise LookupError("No row is found for the condition: %s" % condition)
+        raise LookupError(
+            "No row is found for the condition: " +
+            format_condition(condition))
 
 
 class ColumnType:
