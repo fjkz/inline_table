@@ -312,6 +312,42 @@ class Table:
             Tuple(key='A', value=1)
 
         """
+        if len(condition) == 0:
+            raise LookupError("The condition is empty")
+
+        return next(self.__select(condition, raise_error=True))
+
+    def select_all(self, **condition):
+        """Return all rows that match the condition.
+
+        :Example:
+
+            >>> t = compile('''
+            ... === =====
+            ... key value
+            ... === =====
+            ... 'A'   1
+            ... 'A'  N/A
+            ... 'B'   2
+            ...  *    3
+            ... === =====
+            ... ''')
+            >>> t.select_all(key='A')
+            [Tuple(key='A', value=1), Tuple(key='A', value=3)]
+
+        :param condition: pairs of a column label and its value
+        :return: list of matched rows
+        """
+        rows = []
+        generator = self.__select(condition, raise_error=False)
+        while True:
+            try:
+                rows.append(next(generator))
+            except StopIteration:
+                return rows
+
+    def __select(self, condition, raise_error):
+        """Return a generator to select."""
         def format_condition(condition):
             """Format condition value to 'key1=a, key2=b' style."""
             return ', '.join(
@@ -332,21 +368,26 @@ class Table:
 
             # If the row is N/A raise an error.
             if NotApplicable in row:
-                raise LookupError(
-                    "The result for the condition is not applicable: " +
-                    format_condition(condition))
+                if raise_error:
+                    raise LookupError(
+                        "The result for the condition is not applicable: " +
+                        format_condition(condition))
+                else:
+                    continue
 
             # Overwrite with the values in the condition
             # for excepting the wild card.
             for label, value in condition.items():
                 kv = {label: value}
                 row = row._replace(**kv)
-            return row
+            yield row
 
         # If no row is matched
-        raise LookupError(
-            "No row is found for the condition: " +
-            format_condition(condition))
+        if raise_error:
+            raise LookupError(
+                "No row is found for the condition: " +
+                format_condition(condition))
+        # stop iteration
 
     def union(self, other):
         """Concatenate two tables.

@@ -469,7 +469,7 @@ class TestCompile(unittest.TestCase):
             pass
 
 
-class TestQuery(unittest.TestCase):
+class TestSelect(unittest.TestCase):
 
     def test_wildcard(self):
         tb = compile("""
@@ -511,6 +511,47 @@ class TestQuery(unittest.TestCase):
         """)
         ret = tb.select(A=1)
         self.assertEqual(list(ret), [1, 2])
+
+    def test_no_arg(self):
+        tb = compile("""
+        === ===
+         A   B
+        === ===
+         1   1
+        === ===
+        """)
+        try:
+            ret = tb.select()
+            self.fail()
+        except LookupError as _ok:
+            pass
+
+
+class TestSelectAll(unittest.TestCase):
+
+    def test_no_matched(self):
+        tb = compile("""
+        === ===
+         A   B
+        === ===
+         1   1
+        === ===
+        """)
+        ret = tb.select_all(A=2)
+        self.assertEqual(ret, [])
+
+    def test_no_arg(self):
+        tb = compile("""
+        === ===
+         A   B
+        === ===
+         1   1
+         1   2
+        === ===
+        """)
+        ret = tb.select_all()
+        self.assertEqual(list(ret[0]), [1, 1])
+        self.assertEqual(list(ret[1]), [1, 2])
 
 
 class TestTable(unittest.TestCase):
