@@ -133,7 +133,7 @@ class Table:
         self.Tuple = collections.namedtuple('Tuple', labels)
 
         if not column_types:
-            column_types = [ColumnType.VALUE for _ in range(len(labels))]
+            column_types = [ColumnType.Value() for _ in labels]
         self.column_types = self.Tuple(*column_types)
         self.rows = []
 
@@ -403,25 +403,162 @@ class Table:
         """
         return self.union(other)
 
+    def join(self, other):
+        """Join two tables.
+
+        Tables can be joned also with ``*`` operator.
+
+        This operation behave like NATURAL INNER JOIN in SQL.
+
+        :Example:
+
+            >>> t1 = compile('''
+            ... | A | B |
+            ... |---|---|
+            ... | 1 | 1 |
+            ... | 2 | 2 |''')
+            >>> t2 = compile('''
+            ... | A (cond)   | C |
+            ... |------------|---|
+            ... | A % 2 == 0 | 0 |
+            ... | A % 2 == 1 | 1 |''')
+            >>> t3 = t1.join(t2)
+            >>> t3.select_all()
+            [Tuple(A=1, B=1, C=1), Tuple(A=2, B=2, C=0)]
+
+        :pram other: table to be join
+        :return: joined table
+        """
+        l_labels = list(self._labels)
+        r_labels = list(other._labels)
+        order = (l_labels + r_labels).index
+        union_labels = sorted(set(l_labels) | set(r_labels), key=order)
+
+        def get_ctypes(table):
+            ctypes = []
+            for label in union_labels:
+                try:
+                    ctype = getattr(table.column_types, label)
+                except AttributeError:
+                    ctype = ColumnType._NoneType()
+                ctypes.append(ctype)
+            return ctypes
+
+        # labels               LABEL1 LABEL2 LABEL3 LABEL4 LABEL5 LABEL6
+        # left column types    val    cond   str    regex  coll
+        # left column types           regex  str    cond   value  coll
+        #
+        # --> Fill with NONE
+        # left column types    val    cond   str    regex  coll   NONE
+        # left column types    NONE   regex  str    cond   value  coll
+        #
+        # --> Take join (Info about regex, str or coll are ommited)
+        # union column types   val    cond   val    cond   cond   cond
+        l_ctypes = get_ctypes(self)
+        r_ctypes = get_ctypes(other)
+        union_ctypes = [l_ctypes[i].join(r_ctypes[i])
+                        for i, _ in enumerate(union_labels)]
+
+        def getvalue(row, label):
+            try:
+                return getattr(row, label)
+            except AttributeError:
+                # If the row does not have the label, return the wild card.
+                return WildCard
+
+        joined_table = Table(union_labels, union_ctypes)
+
+        for l_row in self.rows:
+            for r_row in other.rows:
+                #        LABEL1    LABEL2    LABEL3
+                # l_row  val1      val2
+                # r_row            val3      val4
+                #
+                # --> Fill with WildCard (Universal Set)
+                # l_row  val1      val2      WildCard
+                # r_row  WildCard  val3      val4
+                #
+                # --> Take intersection for each cell
+                # joined val1&     val2&     WildCard&
+                #   row   WildCard  val3      val4
+                #
+                # --> If a cell is empty set (IntersectionNotFound) skip the
+                #     row, else add to the joined table.
+                joined_row = []
+                for i, label in enumerate(union_labels):
+                    l_value = getvalue(l_row, label)
+                    r_value = getvalue(r_row, label)
+                    try:
+                        value = union_ctypes[i].evaluate(l_value, r_value)
+                    except IntersectionNotFound:
+                        break
+                    joined_row.append(value)
+                else:
+                    joined_table._insert(joined_row)
+
+        return joined_table
+
+    def __mul__(self, other):
+        """Join two tables.
+
+        This is a syntax sugar of the ``join`` method.
+        """
+        return self.join(other)
+
 
 class ColumnType:
     """Type objects for columns."""
 
     @classmethod
     def get_column_type(cls, directive):
-        if directive in cls.VALUE.DIRECTIVES:
-            return cls.VALUE
-        if directive in cls.CONDITION.DIRECTIVES:
-            return cls.CONDITION
-        if directive in cls.STRING.DIRECTIVES:
-            return cls.STRING
-        if directive in cls.REGEX.DIRECTIVES:
-            return cls.REGEX
-        if directive in cls.COLLECTION.DIRECTIVES:
-            return cls.COLLECTION
+        for type_cls in (cls.Value,
+                         cls.Condition,
+                         cls.String,
+                         cls.Regex,
+                         cls.Collection):
+            if directive in type_cls.DIRECTIVES:
+                return type_cls()
         raise TableMarkupError("Invalid directive '%s'" % directive)
 
-    class _Value:
+    class _TypeBase:
+        """Abstract class of all type types."""
+
+        def __eq__(self, other):
+            return self.DIRECTIVES == other.DIRECTIVES
+
+    class _ValueBase(_TypeBase):
+        """Abstract class of value type types."""
+
+        @property
+        def is_set(self):
+            return False
+
+        def join(self, other):
+            if other.is_set:
+                return ColumnType._ValueJoinSet(self, other)
+            else:
+                return ColumnType._ValueJoinValue(self, other)
+
+        def match(self, a, b):
+            return a == b
+
+    class _SetBase(_TypeBase):
+        """Abstract class of set type types."""
+
+        @property
+        def is_set(self):
+            return True
+
+        def join(self, other):
+            if other.is_set:
+                return ColumnType._SetJoinSet(self, other)
+            else:
+                return ColumnType._SetJoinValue(self, other)
+
+        def match(self, a, b):
+            assert False, 'Not Implemented'
+
+    class Value(_ValueBase):
         """Raw values.
 
         This column type is default.
@@ -440,10 +577,7 @@ class ColumnType:
                 return NotApplicable
             return eval(expression, variables)
 
-        def match(self, a, b):
-            return a == b
-
-    class _Condition:
+    class Condition(_SetBase):
         """Conditions.
 
         Data in a condition column is converted to functions.
@@ -469,7 +603,7 @@ class ColumnType:
 
             :Example:
 
-                >>> f = ColumnType.CONDITION.evaluate('v > 0', {}, 'value')
+                >>> f = ColumnType.Condition().evaluate('v > 0', {}, 'value')
                 >>> f(1)
                 True
                 >>> f(-1)
@@ -489,7 +623,7 @@ class ColumnType:
         def match(self, a, b):
             return a(b)
 
-    class _String:
+    class String(_ValueBase):
         """Strings.
 
         Data in this type column is not evaluated as Python literals.
@@ -507,10 +641,7 @@ class ColumnType:
             # No wild card and N/A
             return expression
 
-        def match(self, a, b):
-            return a == b
-
-    class _Regex:
+    class Regex(_SetBase):
         """Regular expression.
 
         The wild card and the non-applicable value is not used for this
@@ -537,8 +668,8 @@ class ColumnType:
             else:
                 return False
 
-    class _Collection():
-        """Collection"""
+    class Collection(_SetBase):
+        """Collection."""
 
         DIRECTIVES = '(collection), (coll)'
 
@@ -562,12 +693,96 @@ class ColumnType:
             else:
                 return False
 
-    # Values
-    VALUE = _Value()
-    CONDITION = _Condition()
-    STRING = _String()
-    REGEX = _Regex()
-    COLLECTION = _Collection()
+    #
+    # Following classes are used in Table.join
+    #
+
+    class _NoneType(Value):
+
+        def evaluate(self, expression, variables, label):
+            assert False, 'Cannot call _NoneType.evaluate'
+
+    class _ValueJoinValue(Value):
+
+        def __init__(self, left_type, right_type):
+            self.left_type = left_type
+            self.right_type = right_type
+
+        def evaluate(self, left_value, right_value):
+            try:
+                return WildCard.get_intercect(left_value, right_value)
+            except IntersectionNotFound:
+                pass
+
+            if left_value is NotApplicable and right_value is NotApplicable:
+                return NotApplicable
+
+            if self.left_type.match(left_value, right_value):
+                # left and right are equivalent
+                return left_value
+
+            raise IntersectionNotFound
+
+    class _ValueJoinSet(Value):
+        def __init__(self, left_type, right_type):
+            self.left_type = left_type
+            self.right_type = right_type
+
+        def evaluate(self, left_value, right_value):
+            try:
+                return WildCard.get_intercect(left_value, right_value)
+            except IntersectionNotFound:
+                pass
+
+            if left_value is NotApplicable and right_value is NotApplicable:
+                return NotApplicable
+
+            if self.right_type.match(right_value, left_value):
+                return left_value
+
+            raise IntersectionNotFound
+
+    class _SetJoinValue(Value):
+        def __init__(self, left_type, right_type):
+            self.left_type = left_type
+            self.right_type = right_type
+
+        def evaluate(self, left_value, right_value):
+            try:
+                return WildCard.get_intercect(left_value, right_value)
+            except IntersectionNotFound:
+                pass
+
+            if left_value is NotApplicable and right_value is NotApplicable:
+                return NotApplicable
+
+            if self.left_type.match(left_value, right_value):
+                return right_value
+
+            raise IntersectionNotFound
+
+    class _SetJoinSet(Condition):
+        def __init__(self, left_type, right_type):
+            self.left_type = left_type
+            self.right_type = right_type
+
+        def evaluate(self, left_value, right_value):
+            try:
+                return WildCard.get_intercect(left_value, right_value)
+            except IntersectionNotFound:
+                pass
+
+            if left_value is NotApplicable and right_value is NotApplicable:
+                return NotApplicable
+
+            return lambda x: (self.left_type.match(left_value, x) and
+                              self.right_type.match(right_value, x))
+
+
+class IntersectionNotFound(Exception):
+    """Used for internal controls."""
+
+    pass
 
 
 class _WildCard:
@@ -608,6 +823,17 @@ class _WildCard:
     def __repr__(self):
         """Return 'WildCard'."""
         return 'WildCard'
+
+    @staticmethod
+    def get_intercect(a, b):
+        if a is WildCard and b is WildCard:
+            return WildCard
+        if a is WildCard:
+            return b
+        if b is WildCard:
+            return a
+        raise IntersectionNotFound
+
 
 WildCard = _WildCard()
 """The WildCard object. This is unique in the module."""

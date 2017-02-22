@@ -5,7 +5,7 @@ import unittest
 from docutils.parsers.rst.tableparser import SimpleTableParser
 from docutils.statemachine import StringList
 from inline_table import *
-from inline_table import Format, ColumnType, WildCard
+from inline_table import Format, ColumnType, WildCard, NotApplicable
 
 
 class TestDocutils(unittest.TestCase):
@@ -683,8 +683,8 @@ class TestUnion(unittest.TestCase):
                 "Labels of the tables are different: ('a', 'b') != ('a', 'c')")
 
     def test_column_types_diff(self):
-        t1 = Table(['a', 'b'], [ColumnType.VALUE, ColumnType.CONDITION])
-        t2 = Table(['a', 'b'], [ColumnType.VALUE, ColumnType.STRING])
+        t1 = Table(['a', 'b'], [ColumnType.Value(), ColumnType.Condition()])
+        t2 = Table(['a', 'b'], [ColumnType.Value(), ColumnType.String()])
         try:
             t1 + t2
             self.fail()
@@ -693,6 +693,207 @@ class TestUnion(unittest.TestCase):
                 str(e),
                 ('Column types of the tables are different: '
                  '(value, condition) != (value, string)'))
+
+
+class TestJoin(unittest.TestCase):
+
+    def test_join_two_col(self):
+        t1 = compile('''
+        | A | B | C |
+        |---|---|---|
+        | 1 | 2 | 1 |
+        | 1 | 1 | 2 |''')
+        t2 = compile('''
+        | A | B | D |
+        |---|---|---|
+        | 1 | 1 | 3 |
+        | 1 | 1 | 4 |
+        | 2 | 1 | 4 |''')
+        t3 = t1 * t2
+        self.assertEqual(t3._labels, ('A', 'B', 'C', 'D'))
+        it = iter(t3)
+        self.assertEqual(next(it), (1, 1, 2, 3))
+        self.assertEqual(next(it), (1, 1, 2, 4))
+        try:
+            next(it)
+            self.fail()
+        except StopIteration:
+            pass
+
+    def test_join_zero_col(self):
+        t1 = compile('''
+        | A | B |
+        |---|---|
+        | 1 | 1 |
+        | 2 | 2 |''')
+        t2 = compile('''
+        | C | D |
+        |---|---|
+        | 1 | 1 |
+        | 2 | 2 |''')
+        t3 = t1 * t2
+        self.assertEqual(t3._labels, ('A', 'B', 'C', 'D'))
+        it = iter(t3)
+        self.assertEqual(next(it), (1, 1, 1, 1))
+        self.assertEqual(next(it), (1, 1, 2, 2))
+        self.assertEqual(next(it), (2, 2, 1, 1))
+        self.assertEqual(next(it), (2, 2, 2, 2))
+        try:
+            next(it)
+            self.fail()
+        except StopIteration:
+            pass
+
+    def test_na(self):
+        t1 = compile('''
+        | A | B |
+        |---|---|
+        | 1 |N/A|
+        | 2 | 1 |
+        |N/A| 2 |
+        | * | 3 |''')
+        t2 = compile('''
+        | A | C |
+        |---|---|
+        | 1 | 3 |
+        | 2 |N/A|
+        |N/A| 4 |
+        | * | 5 |''')
+        t3 = t1 * t2
+        self.assertEqual(t3._labels, ('A', 'B', 'C'))
+        self.assertEqual(t3._num_rows, 10)
+        self.assertEqual(t3.rows[0], (1, NotApplicable, 3))
+        self.assertEqual(t3.rows[1], (1, NotApplicable, 5))
+        self.assertEqual(t3.rows[2], (2, 1, NotApplicable))
+        self.assertEqual(t3.rows[3], (2, 1, 5))
+        self.assertEqual(t3.rows[4], (NotApplicable, 2, 4))
+        self.assertEqual(t3.rows[5], (NotApplicable, 2, 5))
+        self.assertEqual(t3.rows[6], (1,             3, 3))
+        self.assertEqual(t3.rows[7], (2,             3, NotApplicable))
+        self.assertEqual(t3.rows[8], (NotApplicable, 3, 4))
+        self.assertEqual(t3.rows[9], (WildCard,      3, 5))
+
+    def test_wildcard_right(self):
+        t1 = compile('''
+        | A | B |
+        |---|---|
+        | 1 | 1 |
+        | 2 | 2 |''')
+        t2 = compile('''
+        | A | C |
+        |---|---|
+        | 1 | 3 |
+        | 2 | 4 |
+        | * | 5 |''')
+        t3 = t1 * t2
+        self.assertEqual(t3._labels, ('A', 'B', 'C'))
+        self.assertEqual(t3._num_rows, 4)
+        it = iter(t3)
+        self.assertEqual(next(it), (1, 1, 3))
+        self.assertEqual(next(it), (1, 1, 5))
+        self.assertEqual(next(it), (2, 2, 4))
+        self.assertEqual(next(it), (2, 2, 5))
+        try:
+            next(it)
+            self.failed()
+        except StopIteration:
+            pass
+
+    def test_wildcard_left(self):
+        t1 = compile('''
+        | A | B |
+        |---|---|
+        | 1 | 1 |
+        | 2 | 2 |
+        | * | 3 |''')
+        t2 = compile('''
+        | A | C |
+        |---|---|
+        | 1 | 1 |
+        | 2 | 2 |''')
+        t3 = t1 * t2
+        self.assertEqual(t3._labels, ('A', 'B', 'C'))
+        self.assertEqual(t3._num_rows, 4)
+        it = iter(t3)
+        self.assertEqual(next(it), (1, 1, 1))
+        self.assertEqual(next(it), (2, 2, 2))
+        self.assertEqual(next(it), (1, 3, 1))
+        self.assertEqual(next(it), (2, 3, 2))
+        try:
+            next(it)
+            self.failed()
+        except StopIteration:
+            pass
+
+    def test_condition_left(self):
+        t1 = compile('''
+        | A(cond) | B |
+        |---------|---|
+        | A < 0   | 1 |
+        | A >= 0  | 2 |''')
+        t2 = compile('''
+        | A  | C |
+        |----|---|
+        | -1 | 1 |
+        |  1 | 2 |''')
+        t3 = t1 * t2
+        self.assertEqual(t3._labels, ('A', 'B', 'C'))
+        self.assertEqual(t3._num_rows, 2)
+        it = iter(t3)
+        self.assertEqual(next(it), (-1, 1, 1))
+        self.assertEqual(next(it), (1, 2, 2))
+
+    def test_condition_right(self):
+        t1 = compile('''
+        | A  | B |
+        |----|---|
+        | -1 | 1 |
+        |  1 | 2 |''')
+        t2 = compile('''
+        | A(cond) | C |
+        |---------|---|
+        | A < 0   | 1 |
+        | A >= 0  | 2 |''')
+        t3 = t1 * t2
+        self.assertEqual(t3._labels, ('A', 'B', 'C'))
+        self.assertEqual(t3._num_rows, 2)
+        it = iter(t3)
+        self.assertEqual(next(it), (-1, 1, 1))
+        self.assertEqual(next(it), (1, 2, 2))
+
+    def test_condition_both(self):
+        t1 = compile('''
+        | A (cond) | B |
+        |----------|---|
+        | A > 0    | 0 |
+        | *        | 1 |''')
+        t2 = compile('''
+        | A (cond) | C |
+        |----------|---|
+        | A < 2    | 0 |
+        | *        | 1 |''')
+        t3 = t1 * t2
+        ret = t3.select(A=-1)
+        self.assertEqual(ret, (-1, 1, 0))
+        ret = t3.select(A=1)
+        self.assertEqual(ret, (1, 0, 0))
+        ret = t3.select(A=3)
+        self.assertEqual(ret, (3, 0, 1))
+
+    def test_collection_both(self):
+        t1 = compile('''
+        | A (coll) | B |
+        |----------|---|
+        | 1, 2, 3  | 0 |''')
+        t2 = compile('''
+        | A (coll) | C |
+        |----------|---|
+        | 2, 3, 4  | 1 |''')
+        t3 = t1 * t2
+        self.assertFalse((1, 0, 1) in t3)
+        self.assertTrue((2, 0, 1) in t3)
+        self.assertTrue((3, 0, 1) in t3)
+        self.assertFalse((4, 0, 1) in t3)
 
 
 class TestColumnType(unittest.TestCase):
