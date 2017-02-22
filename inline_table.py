@@ -417,6 +417,8 @@ class ColumnType:
             return cls.STRING
         if directive in cls.REGEX.DIRECTIVES:
             return cls.REGEX
+        if directive in cls.COLLECTION.DIRECTIVES:
+            return cls.COLLECTION
         raise TableMarkupError("Invalid directive '%s'" % directive)
 
     class _Value:
@@ -535,11 +537,37 @@ class ColumnType:
             else:
                 return False
 
+    class _Collection():
+        """Collection"""
+
+        DIRECTIVES = '(collection), (coll)'
+
+        def __str__(self):
+            return 'collection'
+
+        def evaluate(self, expression, variables, label):
+            """Evaluate as a python literal except '*' and 'N/A'."""
+            if expression == WildCard.DIRECTIVE:
+                return WildCard
+            if expression == NotApplicable.DIRECTIVE:
+                return NotApplicable
+            col = eval(expression, variables)
+            if not col.__contains__:
+                raise ValueError("'%s' is not a collection" % expression)
+            return col
+
+        def match(self, a, b):
+            if b in a:
+                return True
+            else:
+                return False
+
     # Values
     VALUE = _Value()
     CONDITION = _Condition()
     STRING = _String()
     REGEX = _Regex()
+    COLLECTION = _Collection()
 
 
 class _WildCard:
@@ -569,6 +597,10 @@ class _WildCard:
         """Return True for called as a regex object."""
         return True
 
+    def __contains__(self, x):
+        """Return True for any object."""
+        return True
+
     def __str__(self):
         """Return '*'."""
         return self.DIRECTIVE
@@ -576,7 +608,6 @@ class _WildCard:
     def __repr__(self):
         """Return 'WildCard'."""
         return 'WildCard'
-
 
 WildCard = _WildCard()
 """The WildCard object. This is unique in the module."""
@@ -609,6 +640,10 @@ class _NotApplicable:
 
     def match(self, s):
         """Return False for called as a regex object."""
+        return False
+
+    def __contains__(self, x):
+        """Return False for any object."""
         return False
 
     def __str__(self):

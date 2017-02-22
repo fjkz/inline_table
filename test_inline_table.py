@@ -695,7 +695,7 @@ class TestUnion(unittest.TestCase):
                  '(value, condition) != (value, string)'))
 
 
-class TestAttrubutes(unittest.TestCase):
+class TestColumnType(unittest.TestCase):
 
     def test_oneline(self):
         tb = compile('''
@@ -810,6 +810,20 @@ class TestAttrubutes(unittest.TestCase):
         self.assertEqual(list(ret1), ['aab', 1])
         ret2 = tb.select(A='abb')
         self.assertEqual(list(ret2), ['abb', 4])
+
+    def test_collection(self):
+        tb = compile('''
+        | S(coll) | V |
+        |---------|---|
+        | 1, 2    | 1 |
+        | N/A     | 2 |
+        |  *      | 3 |''')
+        ret1 = tb.select(S=1)
+        self.assertEqual(ret1, (1, 1))
+        ret1 = tb.select(S=2)
+        self.assertEqual(ret1, (2, 1))
+        ret1 = tb.select(S=3)
+        self.assertEqual(ret1, (3, 3))
 
 
 class TestIterable(unittest.TestCase):

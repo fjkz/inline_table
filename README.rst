@@ -88,32 +88,31 @@ row including N/A is never returned. ::
     LookupError: The result for the condition is not applicable: K=1
 
 We can specify a column type with adding a directive to the header
-row. Four column types in the following table are provided.
+row. Five column types in the following table are provided.
 
-=========== ============================ ===============================
-Column Type Directive                    Evaluated As
-=========== ============================ ===============================
-Value       (value), (val), no directive Python literal
-Condition   (condition), (cond)          Conditional statement.
-                                         Use the 1st letter of the label
-String      (string), (str)              String. Not support * and N/A
-Regex       (regex), (re)                Regular expression
-=========== ============================ ===============================
+=========== ============================= ===============================
+Column Type Directive                     Evaluated As
+=========== ============================= ===============================
+Value       (value), (val), no directive  Python literal
+Condition   (condition), (cond)           Conditional statement.
+                                          Use the 1st letter of the label
+String      (string), (str)               String. Not support * and N/A
+Regex       (regex), (re)                 Regular expression
+Collection  (collection), (coll)          Collection of values
+=========== ============================= ===============================
 
 An example. ::
 
     >>> t4 = inline_table.compile('''
-    ...     ========= ============= ========== =========
-    ...     V (value) C (condition) S (string) R (regex)
-    ...     ========= ============= ========== =========
-    ...         1         C < 0        abc     r'[0-9]+'
-    ...         2         C >= 0        *      r'[a-z]+'
-    ...     ========= ============= ========== =========
+    ... ========= ========== ========== ========= ==========
+    ... V (value) Con (cond) S (string) R (regex) Col (coll)
+    ... ========= ========== ========== ========= ==========
+    ...     1       C < 0       abc     r'[0-9]+' [1, 2, 3]
+    ...     2       C >= 0       *      r'[a-z]+' [4, 5, 6]
+    ... ========= ========== ========== ========= ==========
     ...     ''')
-    >>> t4.select(C=-1, R='012')
-    Tuple(V=1, C=-1, S='abc', R='012')
-    >>> t4.select(C=1, R='abc')
-    Tuple(V=2, C=1, S='*', R='abc')
+    >>> t4.select(Con=-1, R='012', Col=1)
+    Tuple(V=1, Con=-1, S='abc', R='012', Col=1)
 
 Installation
 ============
