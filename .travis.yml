@@ -1,10 +1,9 @@
 language: python
 python:
   - "2.6"
+  - "2.7"
   - "3.2"
-install: "pip install docutils"
+  - "3.4"
 script:
-  - "python setup.py sdist"
+  - "python setup.py test"
   - "python setup.py install"
-  - "rst2html.py README.rst > README.html"
-  - "python test_inline_table.py"

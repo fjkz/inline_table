@@ -117,9 +117,16 @@ An example. ::
 Installation
 ============
 
-Run the following command for installation: ::
+We can install the package with the following command: ::
 
     $ python setup.py install
+
+Testing
+=======
+
+We can run unit-tests with the following command: ::
+
+    $ python setup.py test
 
 Requirements
 ============

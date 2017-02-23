@@ -1,8 +1,11 @@
 from __future__ import print_function
 import unittest
+import doctest
 
 from docutils.parsers.rst.tableparser import SimpleTableParser
 from docutils.statemachine import StringList
+
+import inline_table
 from inline_table import *
 from inline_table import Format, ColumnType, WildCard, NotApplicable
 
@@ -1090,16 +1093,23 @@ class TestIterable(unittest.TestCase):
         self.assertEqual(i, 3)
 
 
-if __name__ == '__main__':
-    import doctest
-    import inline_table
-    result1 = doctest.testmod(inline_table)
-    result2 = doctest.testfile('README.rst')
-    attempted = result1.attempted + result2.attempted
-    failed = result1.failed + result2.failed
-    print('Ran %d tests' % attempted, file=sys.stderr)
-    if failed > 0:
-        sys.exit(1)
-    else:
-        print('OK', file=sys.stderr)
-    unittest.main()
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTests([unittest.makeSuite(test_cls) for test_cls in (
+        TestDocutils,
+        TestFormatEstimation,
+        TestSimpleTableParser,
+        TestGridTableParser,
+        TestMarkdownParser,
+        TestCompile,
+        TestSelect,
+        TestSelectAll,
+        TestTable,
+        TestUnion,
+        TestJoin,
+        TestColumnType,
+        TestIterable,
+        )])
+    suite.addTests(doctest.DocTestSuite(inline_table))
+    suite.addTests(doctest.DocFileSuite('README.rst'))
+    return suite

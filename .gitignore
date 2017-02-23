@@ -2,9 +2,9 @@
 .pydevproject
 *.pyc
 __pycache__
-docutils*
 MANIFEST
 dist
 build
+*.egg
 *.egg-info
 *.html
