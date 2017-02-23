@@ -1,5 +1,4 @@
 from __future__ import print_function
-import sys
 import unittest
 
 from docutils.parsers.rst.tableparser import SimpleTableParser
@@ -426,7 +425,7 @@ class TestCompile(unittest.TestCase):
         ======
         """)
         ret = tb.select(A='1')
-        self.assertEqual(list(ret), ['1'])
+        self.assertEqual(ret, ('1',))
 
     def test_variable_leak1(self):
         try:
@@ -461,7 +460,7 @@ class TestCompile(unittest.TestCase):
         | 1 | 2 | 3 | 4 |
         ''')
         ret = t.select(A=1)
-        self.assertEqual(list(ret), [1, 2, 3, 4])
+        self.assertEqual(ret, (1, 2, 3, 4))
 
     def test_markdown2(self):
         t = compile('''
@@ -470,11 +469,11 @@ class TestCompile(unittest.TestCase):
           1 | 2 | 3 | 4
         ''')
         ret = t.select(A=1)
-        self.assertEqual(list(ret), [1, 2, 3, 4])
+        self.assertEqual(ret, (1, 2, 3, 4))
 
     def test_invalid_directive(self):
         try:
-            t = compile('''
+            compile('''
                 | A (foo) |
                 |---------|
                 | a       |
@@ -497,9 +496,8 @@ class TestSelect(unittest.TestCase):
         """)
 
         ret = tb.select(A=2)
-        self.assertEqual(list(ret), [2, 2])
-        # Assert WildCard is not included in the returned.
-        self.assertEqual([str(v) for v in ret], ['2', '2'])
+        self.assertEqual(ret, (2, 2))
+        self.assertTrue(ret[0] is not WildCard)
 
     def test_na(self):
         tb = compile("""
@@ -525,7 +523,7 @@ class TestSelect(unittest.TestCase):
         === ===
         """)
         ret = tb.select(A=1)
-        self.assertEqual(list(ret), [1, 2])
+        self.assertEqual(ret, (1, 2))
 
     def test_no_arg(self):
         tb = compile("""
@@ -536,7 +534,7 @@ class TestSelect(unittest.TestCase):
         === ===
         """)
         try:
-            ret = tb.select()
+            tb.select()
             self.fail()
         except LookupError as _ok:
             pass
@@ -565,8 +563,8 @@ class TestSelectAll(unittest.TestCase):
         === ===
         """)
         ret = tb.select_all()
-        self.assertEqual(list(ret[0]), [1, 1])
-        self.assertEqual(list(ret[1]), [1, 2])
+        self.assertEqual(ret[0], (1, 1))
+        self.assertEqual(ret[1], (1, 2))
 
 
 class TestTable(unittest.TestCase):
@@ -574,7 +572,7 @@ class TestTable(unittest.TestCase):
     def test_labels(self):
         tb = Table(['keyA', 'keyB', 'keyC'])
         ret = tb._labels
-        self.assertEqual(list(ret), ['keyA', 'keyB', 'keyC'])
+        self.assertEqual(ret, ('keyA', 'keyB', 'keyC'))
 
     def test_one_key_no_value(self):
         tb = Table(['key'])
@@ -590,7 +588,7 @@ class TestTable(unittest.TestCase):
 
         ret = tb.select(key='value')
 
-        self.assertEqual(list(ret), ['value'])
+        self.assertEqual(ret, ('value',))
 
     def test_one_key_two_value(self):
         tb = Table(['key'])
@@ -599,7 +597,7 @@ class TestTable(unittest.TestCase):
 
         ret = tb.select(key='value1')
 
-        self.assertEqual(list(ret), ['value1'])
+        self.assertEqual(ret, ('value1',))
 
     def test_two_key_two_value1(self):
         tb = Table(['keyA', 'keyB'])
@@ -608,7 +606,7 @@ class TestTable(unittest.TestCase):
 
         ret = tb.select(keyA='value1A')
 
-        self.assertEqual(list(ret), ['value1A', 'value1B'])
+        self.assertEqual(ret, ('value1A', 'value1B'))
 
     def test_two_key_two_value2(self):
         tb = Table(['keyA', 'keyB'])
@@ -617,7 +615,7 @@ class TestTable(unittest.TestCase):
 
         ret = tb.select(keyB='value2B')
 
-        self.assertEqual(list(ret), ['value2A', 'value2B'])
+        self.assertEqual(ret, ('value2A', 'value2B'))
 
     def test_incorrect_label(self):
         tb = Table(['keyA', 'keyB'])
@@ -643,14 +641,10 @@ class TestUnion(unittest.TestCase):
             | 4 | 8 |''')
         t3 = t1.union(t2)
         it = iter(t3)
-        ret = list(next(it))
-        self.assertEqual(ret, [1, 2])
-        ret = list(next(it))
-        self.assertEqual(ret, [2, 4])
-        ret = list(next(it))
-        self.assertEqual(ret, [3, 6])
-        ret = list(next(it))
-        self.assertEqual(ret, [4, 8])
+        self.assertEqual(next(it), (1, 2))
+        self.assertEqual(next(it), (2, 4))
+        self.assertEqual(next(it), (3, 6))
+        self.assertEqual(next(it), (4, 8))
 
     def test_plus_operator(self):
         t1 = compile('''
@@ -665,14 +659,10 @@ class TestUnion(unittest.TestCase):
             | 4 | 8 |''')
         t3 = t1 + t2
         it = iter(t3)
-        ret = list(next(it))
-        self.assertEqual(ret, [1, 2])
-        ret = list(next(it))
-        self.assertEqual(ret, [2, 4])
-        ret = list(next(it))
-        self.assertEqual(ret, [3, 6])
-        ret = list(next(it))
-        self.assertEqual(ret, [4, 8])
+        self.assertEqual(next(it), (1, 2))
+        self.assertEqual(next(it), (2, 4))
+        self.assertEqual(next(it), (3, 6))
+        self.assertEqual(next(it), (4, 8))
 
     def test_width_diff(self):
         t1 = Table(['a', 'b'])
@@ -707,6 +697,14 @@ class TestUnion(unittest.TestCase):
                 str(e),
                 ('Column types of the tables are different: '
                  '(value, condition) != (value, string)'))
+
+
+def assertIterationStop(iterator):
+    try:
+        next(iterator)
+        assert False, 'Expect StopIteration is raised'
+    except StopIteration:
+        pass
 
 
 class TestJoin(unittest.TestCase):
@@ -752,11 +750,7 @@ class TestJoin(unittest.TestCase):
         self.assertEqual(next(it), (1, 1, 2, 2))
         self.assertEqual(next(it), (2, 2, 1, 1))
         self.assertEqual(next(it), (2, 2, 2, 2))
-        try:
-            next(it)
-            self.fail()
-        except StopIteration:
-            pass
+        assertIterationStop(it)
 
     def test_na(self):
         t1 = compile('''
@@ -807,11 +801,7 @@ class TestJoin(unittest.TestCase):
         self.assertEqual(next(it), (1, 1, 5))
         self.assertEqual(next(it), (2, 2, 4))
         self.assertEqual(next(it), (2, 2, 5))
-        try:
-            next(it)
-            self.failed()
-        except StopIteration:
-            pass
+        assertIterationStop(it)
 
     def test_wildcard_left(self):
         t1 = compile('''
@@ -833,11 +823,7 @@ class TestJoin(unittest.TestCase):
         self.assertEqual(next(it), (2, 2, 2))
         self.assertEqual(next(it), (1, 3, 1))
         self.assertEqual(next(it), (2, 3, 2))
-        try:
-            next(it)
-            self.failed()
-        except StopIteration:
-            pass
+        assertIterationStop(it)
 
     def test_condition_left(self):
         t1 = compile('''
@@ -920,7 +906,7 @@ class TestColumnType(unittest.TestCase):
              1
             ==========''')
         ret = tb.select(a=1)
-        self.assertEqual(list(ret), [1])
+        self.assertEqual(ret, (1,))
 
     def test_value(self):
         tb = compile('''
@@ -932,7 +918,7 @@ class TestColumnType(unittest.TestCase):
              2
             =========''')
         ret = tb.select(a=1)
-        self.assertEqual(list(ret), [1])
+        self.assertEqual(ret, (1,))
 
     def test_condition(self):
         tb = compile('''
@@ -944,9 +930,9 @@ class TestColumnType(unittest.TestCase):
             0 <= a      False
             =========== =====''')
         ret = tb.select(a=-1)
-        self.assertEqual(list(ret), [-1, True])
+        self.assertEqual(ret, (-1, True))
         ret = tb.select(a=1)
-        self.assertEqual(list(ret), [1, False])
+        self.assertEqual(ret, (1, False))
 
     def test_condition_right(self):
         tb = compile('''
@@ -958,9 +944,9 @@ class TestColumnType(unittest.TestCase):
             False  b >= 0
             ===== ===========''')
         ret = tb.select(b=-1)
-        self.assertEqual(list(ret), [True, -1])
+        self.assertEqual(ret, (True, -1))
         ret = tb.select(b=1)
-        self.assertEqual(list(ret), [False, 1])
+        self.assertEqual(ret, (False, 1))
 
     def test_consition_wildcard(self):
         tb = compile('''
@@ -972,7 +958,7 @@ class TestColumnType(unittest.TestCase):
             *           False
             =========== =====''')
         ret = tb.select(a=1)
-        self.assertEqual(list(ret), [1, False])
+        self.assertEqual(ret, (1, False))
 
     def test_consition_na(self):
         tb = compile('''
@@ -984,7 +970,7 @@ class TestColumnType(unittest.TestCase):
             0 <= a      False
             =========== =====''')
         ret = tb.select(a=1)
-        self.assertEqual(list(ret), [1, False])
+        self.assertEqual(ret, (1, False))
 
     def test_cond(self):
         tb = compile('''
@@ -996,7 +982,7 @@ class TestColumnType(unittest.TestCase):
             A == 2  2
             ====== ===''')
         ret = tb.select(A=1)
-        self.assertEqual(list(ret), [1, 1])
+        self.assertEqual(ret, (1, 1))
 
     def test_string(self):
         tb = compile('''
@@ -1008,7 +994,7 @@ class TestColumnType(unittest.TestCase):
             aaaaaaaa bbbbb
             ======== =====''')
         ret = tb.select(A='AAAAAAAA')
-        self.assertEqual(list(ret), ['AAAAAAAA', 'BBBBB'])
+        self.assertEqual(ret, ('AAAAAAAA', 'BBBBB'))
 
     def test_regex(self):
         tb = compile('''
@@ -1022,9 +1008,9 @@ class TestColumnType(unittest.TestCase):
             *        4
             ======== =''')
         ret1 = tb.select(A='aab')
-        self.assertEqual(list(ret1), ['aab', 1])
+        self.assertEqual(ret1, ('aab', 1))
         ret2 = tb.select(A='abb')
-        self.assertEqual(list(ret2), ['abb', 4])
+        self.assertEqual(ret2, ('abb', 4))
 
     def test_collection(self):
         tb = compile('''
@@ -1055,15 +1041,11 @@ class TestIterable(unittest.TestCase):
          *
         ===''')
         it = iter(tb)
-        self.assertEqual(list(next(it)), [1])
-        self.assertEqual(list(next(it)), [2])
-        self.assertEqual(list(next(it)), [4])
+        self.assertEqual(next(it), (1,))
+        self.assertEqual(next(it), (2,))
+        self.assertEqual(next(it), (4,))
         self.assertTrue(next(it)[0] is WildCard)
-        try:
-            next(it)
-            self.fail()
-        except StopIteration as _ok:
-            pass
+        assertIterationStop(it)
 
     def test_forloop1(self):
         tb = compile('''
