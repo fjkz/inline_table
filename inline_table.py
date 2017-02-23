@@ -1,25 +1,7 @@
-"""Library for embedding text tables in source-code.
+"""Embedded text tables in Python code.
 
-**inline_table** is a Python module for embedding text tables in
+``inline_table`` is a Python module for embedding text tables into
 source-code. We can write source-code just like a design document.
-
-The following is a basic example. Compile an text table text with the
-``compile`` function. And get a row data with the ``select`` method. ::
-
-    >>> import inline_table
-    >>> t = inline_table.compile('''
-    ... ====== ======= ====== ======
-    ... state  event    next  action
-    ... ====== ======= ====== ======
-    ... 'stop' 'accel' 'run'  'move'
-    ... 'stop' 'brake' 'stop'  None
-    ... 'run'  'accel' 'run'  'move'
-    ... 'run'  'brake' 'stop'  None
-    ... ====== ======= ====== ======
-    ... ''')
-    >>> t.select(state='stop', event='accel')
-    Tuple(state='stop', event='accel', next='run', action='move')
-
 """
 
 import collections
@@ -41,23 +23,116 @@ __all__ = ('compile', 'Table', 'TableMarkupError')
 
 
 def compile(text, **variables):
-    """Compile a table text to a Table object.
-
-    The following formats are supported:
-
-    * reStructuredText Simple Table,
-    * reStructuredText Grid Table,
-    * Markdown Table.
-
-    Values can be passed to the table with the ``variables`` keyword arguments.
-    They are used when literals in the table are evaluated.
+    """Compile a table text to a ``Table`` object.
 
     :param text: a table text
     :param variables: values passed to the table
     :type text: string
+    :type variables: dict
     :return: a table object
     :rtype: Table
     :raise TableMarkupError: the text format is incorrect
+
+    :Example:
+
+        >>> text = '''
+        ... ============ ======== ==========
+        ...  age (cond)   gender  call (str)
+        ... ============ ======== ==========
+        ...       a < 0    N/A
+        ...  0 <= a < 2     *     baby
+        ...  0 <= a < 7     *     kid
+        ...  7 <= a < 18    M     boy
+        ...  7 <= a < 16    F     girl
+        ... 18 <= a         M     gentleman
+        ... 16 <= a         F     lady
+        ...       *         *     man
+        ... ============ ======== ==========
+        ... '''
+        >>> table = compile(text, M='male', F='female')
+        >>> table.select(age=24, gender='female')
+        Tuple(age=24, gender='female', call='lady')
+
+    **Table Formats**:
+
+    ``inline_table`` supports the following format as a table text:
+
+    - `reStructuredText Simple Tables`_,
+    - `reStructuredText Grid Tables`_,
+    - `Markdown Tables`_.
+
+    .. _reStructuredText Simple Tables: http://docutils.sourceforge.net/
+                            docs/ref/rst/restructuredtext.html#simple-tables
+    .. _reStructuredText Grid Tables: http://docutils.sourceforge.net/
+                            docs/ref/rst/restructuredtext.html#grid-tables
+    .. _Markdown Tables: https://michelf.ca/projects/php-markdown/extra/#table
+
+    The format of the table text is estimated automatically.
+
+    **Passing Values**:
+
+    We can pass values to the table with the ``variables`` keyword arguments.
+    Values can be passed with the following syntax: ::
+
+        compile(text,
+                <name>=<value>, <name>=<value>, ...)
+
+    Here ``<name>`` are variable names written in the table text.
+
+    **Special Values**:
+
+    Two special values can be set to the table.
+
+    ================ ========= ========================================
+     Name            Directive Description
+    ================ ========= ========================================
+     Wild Card         ``*``   Matches any value. The universal set.
+     Not-Applicable   ``N/A``  N/A rows are never returned for queries.
+    ================ ========= ========================================
+
+    If a string in a cell of the table text equals a directive, the cell is
+    evaluated as the special value.
+
+    Note that the string column type does not support special values.
+
+    **Column Types**:
+
+    We can specify a column type with adding a directive to the header
+    row. The difference among column types is how the strings in each cell are
+    evaluated. ``inline_table`` provides five column types:
+
+    =========== =============== =============================== ====
+    Column Type Directive       Evaluated As                    Set?
+    =========== =============== =============================== ====
+    Value       No Directive,   Python literal                  no
+                (value), (val)
+    String      (string), (str) String.                         no
+                                Not support ``*`` and ``N/A``.
+    Condition   (condition),    Conditional statement.          yes
+                (cond)          Use the 1st letter of the label
+    Regex       (regex), (re)   Regular expression              yes
+    Collection  (collection),   Collection of values            yes
+                (coll)
+    =========== =============== =============================== ====
+
+    A cell in a set column type represents multiple values. The upper table and
+    the lower table in the following act almost similarly (but not definitive
+    equally). ::
+
+        ========= ===
+        a (coll)   b
+        ========= ===
+        (1, 2, 3)  4
+        ========= ===
+
+        ======= ===
+        a (val)  b
+        ======= ===
+           1     4
+           2     4
+           3     4
+        ======= ===
+
     """
     lines = text.splitlines()
     lines = strip_lines(lines)
@@ -119,7 +194,11 @@ def strip_lines(lines):
 
 
 class Table:
-    """Table data structure."""
+    """Data structure having a table data.
+
+    Table objects are created by the ``compile`` function.
+    A user does not create a table object by himself.
+    """
 
     def __init__(self, labels, column_types=None):
         """Initialize the object.
@@ -168,8 +247,10 @@ class Table:
         """
         self.rows.append(self.Tuple(*row_values))
 
-    def __iter__(self):
+    def iterator(self):
         """Return a iterator object.
+
+        The ``iter`` build-in function or for-loop is also available.
 
         A row that contains the not-applicable value is skipped.
 
@@ -200,8 +281,14 @@ class Table:
         # Almost as same as select_all()
         return self.__select(condition={}, raise_error=False)
 
-    def __contains__(self, values):
-        """Check if this table contains given values with in-statements.
+    def __iter__(self):
+        """Return self.iterator()."""
+        return self.iterator()
+
+    def contains(self, values):
+        """Check if this table contains given values.
+
+        In-statement is also available.
 
         A row contain N/A returns False.
 
@@ -215,11 +302,7 @@ class Table:
             ... === ===''')
             >>> {'A': 1} in t
             True
-            >>> {'A': 2} in t
-            False
             >>> (1, 2) in t
-            True
-            >>> [1, 2] in t
             True
 
         """
@@ -241,11 +324,18 @@ class Table:
         except LookupError:
             return False
 
+    def __contains__(self, values):
+        """Check if this table contains given values.
+
+        This is a syntax suggar of the ``contains`` method.
+        """
+        return self.contains(values)
+
     def select(self, **condition):
-        """Return the first row that matches the condition.
+        """Get the first row that matches the condition.
 
         :param condition: pairs of a column label and its value
-        :return: the matched row
+        :return: the fist matched row
         :rtype: Tuple (named tuple)
         :raise LookupError: no applicable row is found for the condition
 
@@ -269,7 +359,11 @@ class Table:
         return next(self.__select(condition, raise_error=True))
 
     def select_all(self, **condition):
-        """Return all rows that match the condition.
+        """Get all rows that match the condition.
+
+        :param condition: pairs of a column label and its value
+        :return: list of matched rows
+        :rtype: list of named tuples
 
         :Example:
 
@@ -286,8 +380,6 @@ class Table:
             >>> t.select_all(key='A')
             [Tuple(key='A', value=1), Tuple(key='A', value=3)]
 
-        :param condition: pairs of a column label and its value
-        :return: list of matched rows
         """
         rows = []
         generator = self.__select(condition, raise_error=False)
@@ -343,13 +435,13 @@ class Table:
     def union(self, other):
         """Concatenate two tables.
 
+        Tables can be concatenated also with ``+`` operator.
+
         Two tables must have the same width, the same labels and
         the same type columns.
 
-        Tables can be concatenated also with ``+`` operator.
-
-        :param table: table to be concat
-        :return: concatenated table
+        :param other: a table to be concatenated
+        :return: the concatenated table
         :raise TypeError: width, labels or columns types are different
         """
         if self._num_columns != other._num_columns:
@@ -388,7 +480,10 @@ class Table:
 
         Tables can be joned also with ``*`` operator.
 
-        This operation behave like NATURAL INNER JOIN in SQL.
+        This method behaves like NATURAL INNER JOIN in SQL.
+
+        :param other: a table to be join
+        :return: the joined table
 
         :Example:
 
@@ -402,12 +497,10 @@ class Table:
             ... |------------|---|
             ... | A % 2 == 0 | 0 |
             ... | A % 2 == 1 | 1 |''')
-            >>> t3 = t1.join(t2)
+            >>> t3 = t1.join(t2)  # ``t1 * t2`` is equivalent
             >>> t3.select_all()
             [Tuple(A=1, B=1, C=1), Tuple(A=2, B=2, C=0)]
 
-        :pram other: table to be join
-        :return: joined table
         """
         l_labels = list(self._labels)
         r_labels = list(other._labels)

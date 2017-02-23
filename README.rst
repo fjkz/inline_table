@@ -1,8 +1,8 @@
-===============================================================================
-    inline_table - Python module for embedding text tables into source-code
-===============================================================================
+===================================================================================
+                inline_table - Embedded text tables in Python code
+===================================================================================
 
-**inline_table** is a Python module for embedding text tables into source-code.
+``inline_table`` is a Python module for embedding text tables into source-code.
 
 Table is a good notation. It is simple and easy to read. We can see if we
 concern about all cases MECE-ly or not. We create many tables as software
@@ -19,100 +19,31 @@ as a document. The ``inline_table`` module enables us to do it.
 
 Write a simple logic more simply.
 
-Usage
-=====
+Example
+=======
 
-Compile a table text with the ``compile`` function. The table text must be
-formatted with one of the following formats:
-
-* reStructuredText Simple Table,
-* reStructuredText Grid Table,
-* Markdown Table.
-
-The ``compile`` function returns a ``Table`` object. ::
+``inline_table`` compiles a text table to a ``Table`` object. We can query a
+row in the table. The follow is an example: ::
 
     >>> import inline_table
-    >>> t1 = inline_table.compile('''
-    ...     === === ====
-    ...      A   B   AB
-    ...     === === ====
-    ...      1   1  '1'
-    ...      1   2  '2'
-    ...      2   1  '2'
-    ...      2   2  '4'
-    ...     === === ====
-    ...     ''')
+    >>> text = '''
+    ... ============ ======== ==========
+    ... age (cond)   gender   call (str)
+    ... ============ ======== ==========
+    ...  0 <= a < 2   *       baby
+    ...  0 <= a < 7   *       kid
+    ...  7 <= a < 18  M       boy
+    ...  7 <= a < 16  F       girl
+    ... 18 <= a       M       gentleman
+    ... 16 <= a       F       lady
+    ...       *       *       man
+    ... ============ ======== ==========
+    ... '''
+    >>> table = inline_table.compile(text, M='male', F='female')
+    >>> table.select(age=24, gender='female')
+    Tuple(age=24, gender='female', call='lady')
 
-The literals in the table body are evaluated in the compilation. ``1`` is an
-integer and ``'1'`` is a string.
-
-Search values in the ``Table`` object with the ``select`` method. A named tuple of
-the first matched row is returned. ::
-
-    >>> t1.select(A=1, B=2)
-    Tuple(A=1, B=2, AB='2')
-
-Other methods for getting rows are defined. See the pydoc.
-
-We can pass values to a table. ::
-
-    >>> t2 = inline_table.compile('''
-    ...     === =====
-    ...     key value
-    ...     === =====
-    ...      1    a
-    ...      2    b
-    ...     === =====
-    ...     ''',
-    ...     a='A', b='B')
-    >>> t2.select(key=1)
-    Tuple(key=1, value='A')
-
-The wild card and the not-applicable value are provided. We can write them
-respectively with ``*`` and ``N/A``. The wild card matches any value, and a
-row including N/A is never returned. ::
-
-    >>> t3 = inline_table.compile('''
-    ...     === ===
-    ...      K   V
-    ...     === ===
-    ...      1  N/A
-    ...      *   1
-    ...     === ===
-    ...     ''')
-    >>> t3.select(K=2)
-    Tuple(K=2, V=1)
-    >>> t3.select(K=1)
-    Traceback (most recent call last):
-        ...
-    LookupError: The result for the condition is not applicable: K=1
-
-We can specify a column type with adding a directive to the header
-row. Five column types in the following table are provided.
-
-=========== ============================= ===============================
-Column Type Directive                     Evaluated As
-=========== ============================= ===============================
-Value       (value), (val), no directive  Python literal
-Condition   (condition), (cond)           Conditional statement.
-                                          Use the 1st letter of the label
-String      (string), (str)               String. Not support * and N/A
-Regex       (regex), (re)                 Regular expression
-Collection  (collection), (coll)          Collection of values
-=========== ============================= ===============================
-
-An example. ::
-
-    >>> t4 = inline_table.compile('''
-    ... ========= ========== ========== ========= ==========
-    ... V (value) Con (cond) S (string) R (regex) Col (coll)
-    ... ========= ========== ========== ========= ==========
-    ...     1       C < 0       abc     r'[0-9]+' [1, 2, 3]
-    ...     2       C >= 0       *      r'[a-z]+' [4, 5, 6]
-    ... ========= ========== ========== ========= ==========
-    ...     ''')
-    >>> t4.select(Con=-1, R='012', Col=1)
-    Tuple(V=1, Con=-1, S='abc', R='012', Col=1)
+See the API document for the detail of the usage.
 
 Installation
 ============
@@ -131,7 +62,7 @@ We can run unit-tests with the following command: ::
 Requirements
 ============
 
-* Python 2.6, 2.7 or 3.X
+* Python 2.6, 2.7, 3.2 or later
 * docutils package 0.13 or later
 
 License
