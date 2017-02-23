@@ -916,6 +916,9 @@ class Format:
         @classmethod
         def can_accept(cls, lines, line_pattern):
             """Check if the first/last line match the pattern."""
+            if len(lines) < 3:
+                return False
+
             first_line = lines[0]
             last_line = lines[-1]
 
@@ -1039,7 +1042,9 @@ class Format:
 
         def can_accept(self, lines):
             """Judge if the table is estimated to be this format."""
-            if re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]):
+            if len(lines) < 3:
+                return False
+            elif re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]):
                 return True
             else:
                 return False

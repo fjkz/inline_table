@@ -199,22 +199,22 @@ class TestDocutils(unittest.TestCase):
 class TestFormatEstimation(unittest.TestCase):
 
     def test_simple_table1(self):
-        fmt = Format.estimate_format(['=== ===\n',
-                                      '=== ===\n'])
+        fmt = Format.estimate_format(['=== ===\n'] * 3)
         self.assertTrue(fmt is Format.REST_SIMPLE_TABLE)
 
     def test_simple_table2(self):
-        fmt = Format.estimate_format(['==\n',
-                                      '=='])
+        fmt = Format.estimate_format(['==\n'] * 3)
         self.assertTrue(fmt is Format.REST_SIMPLE_TABLE)
 
     def test_grid_table1(self):
         fmt = Format.estimate_format(['+---+---+\n',
+                                      '+===+===+\n',
                                       '+---+---+\n'])
         self.assertTrue(fmt is Format.REST_GRID_TABLE)
 
     def test_grid_table2(self):
         fmt = Format.estimate_format(['+--+\n',
+                                      '+==+\n',
                                       '+--+'])
         self.assertTrue(fmt is Format.REST_GRID_TABLE)
 
@@ -247,6 +247,20 @@ class TestFormatEstimation(unittest.TestCase):
                                       ':--- |:--- |: ---\n',
                                       'c | d | e \n'])
         self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+
+    def test_invalid_format1(self):
+        try:
+            Format.estimate_format(['aaa'])
+            self.fail()
+        except TableMarkupError:
+            pass
+
+    def test_invalid_format2(self):
+        try:
+            Format.estimate_format(['==='])
+            self.fail()
+        except TableMarkupError:
+            pass
 
 
 class TestSimpleTableParser(unittest.TestCase):
