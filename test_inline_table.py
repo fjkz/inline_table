@@ -573,12 +573,12 @@ class TestSelectAll(unittest.TestCase):
 class TestTable(unittest.TestCase):
 
     def test_labels(self):
-        tb = Table(['keyA', 'keyB', 'keyC'])
+        tb = Table()._initialize(['keyA', 'keyB', 'keyC'])
         ret = tb._labels
         self.assertEqual(ret, ('keyA', 'keyB', 'keyC'))
 
     def test_one_key_no_value(self):
-        tb = Table(['key'])
+        tb = Table()._initialize(['key'])
         try:
             tb.select(key='value')
             self.fail()
@@ -586,7 +586,7 @@ class TestTable(unittest.TestCase):
             pass
 
     def test_one_key_one_value(self):
-        tb = Table(['key'])
+        tb = Table()._initialize(['key'])
         tb._insert(['value'])
 
         ret = tb.select(key='value')
@@ -594,7 +594,7 @@ class TestTable(unittest.TestCase):
         self.assertEqual(ret, ('value',))
 
     def test_one_key_two_value(self):
-        tb = Table(['key'])
+        tb = Table()._initialize(['key'])
         tb._insert(['value1'])
         tb._insert(['value2'])
 
@@ -603,7 +603,7 @@ class TestTable(unittest.TestCase):
         self.assertEqual(ret, ('value1',))
 
     def test_two_key_two_value1(self):
-        tb = Table(['keyA', 'keyB'])
+        tb = Table()._initialize(['keyA', 'keyB'])
         tb._insert(['value1A', 'value1B'])
         tb._insert(['value2A', 'value2B'])
 
@@ -612,7 +612,7 @@ class TestTable(unittest.TestCase):
         self.assertEqual(ret, ('value1A', 'value1B'))
 
     def test_two_key_two_value2(self):
-        tb = Table(['keyA', 'keyB'])
+        tb = Table()._initialize(['keyA', 'keyB'])
         tb._insert(['value1A', 'value1B'])
         tb._insert(['value2A', 'value2B'])
 
@@ -621,7 +621,7 @@ class TestTable(unittest.TestCase):
         self.assertEqual(ret, ('value2A', 'value2B'))
 
     def test_incorrect_label(self):
-        tb = Table(['keyA', 'keyB'])
+        tb = Table()._initialize(['keyA', 'keyB'])
         try:
             tb.select(keyC=1)
             self.fail()
@@ -668,8 +668,8 @@ class TestUnion(unittest.TestCase):
         self.assertEqual(next(it), (4, 8))
 
     def test_width_diff(self):
-        t1 = Table(['a', 'b'])
-        t2 = Table(['a', 'b', 'c'])
+        t1 = Table()._initialize(['a', 'b'])
+        t2 = Table()._initialize(['a', 'b', 'c'])
         try:
             t1 + t2
             self.fail()
@@ -679,8 +679,8 @@ class TestUnion(unittest.TestCase):
                 "Width of the tables are different: 2 != 3")
 
     def test_labels_diff(self):
-        t1 = Table(['a', 'b'])
-        t2 = Table(['a', 'c'])
+        t1 = Table()._initialize(['a', 'b'])
+        t2 = Table()._initialize(['a', 'c'])
         try:
             t1 + t2
             self.fail()
@@ -690,8 +690,8 @@ class TestUnion(unittest.TestCase):
                 "Labels of the tables are different: ('a', 'b') != ('a', 'c')")
 
     def test_column_types_diff(self):
-        t1 = Table(['a', 'b'], [ColumnType.Value(), ColumnType.Condition()])
-        t2 = Table(['a', 'b'], [ColumnType.Value(), ColumnType.String()])
+        t1 = Table()._initialize(['a', 'b'], [ColumnType.Value(), ColumnType.Condition()])
+        t2 = Table()._initialize(['a', 'b'], [ColumnType.Value(), ColumnType.String()])
         try:
             t1 + t2
             self.fail()

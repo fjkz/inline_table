@@ -152,7 +152,7 @@ def compile(text, **variables):
 
     # Convert strings to ColumnType values
     column_types = [ColumnType.get_column_type(a) for a in column_types]
-    table = Table(labels, column_types)
+    table = Table()._initialize(labels, column_types)
     for row in rows:
         # Evaluate the literal in each cell with given variables.
         row_evaluated = []
@@ -197,11 +197,14 @@ class Table:
     """Data structure having a table data.
 
     Table objects are created by the ``compile`` function.
-    A user does not create a table object by himself.
     """
 
-    def __init__(self, labels, column_types=None):
-        """Initialize the object.
+    def _initialize(self, labels, column_types=None):
+        """Private initializer.
+
+        This method is defined as I do not show __init__ for users. Call
+        ``Table._initialize(labels, column_types)`` instead of
+        ``Table(labels column_types)``.
 
         :param labels: list of label names
         :param column_types: list of column types
@@ -215,6 +218,7 @@ class Table:
             column_types = [ColumnType.Value() for _ in labels]
         self.column_types = self.Tuple(*column_types)
         self.rows = []
+        return self
 
     def __str__(self):
         """Return Tab separated values."""
@@ -250,7 +254,7 @@ class Table:
     def iterator(self):
         """Return a iterator object.
 
-        The ``iter`` build-in function or for-loop is also available.
+        The ``iter`` build-in function and for-loops are also available.
 
         A row that contains the not-applicable value is skipped.
 
@@ -539,7 +543,7 @@ class Table:
                 # If the row does not have the label, return the wild card.
                 return WildCard
 
-        joined_table = Table(union_labels, union_ctypes)
+        joined_table = Table()._initialize(union_labels, union_ctypes)
 
         for l_row in self.rows:
             for r_row in other.rows:
