@@ -241,26 +241,6 @@ class Table:
         except LookupError:
             return False
 
-    def __call__(self, **condition):
-        """Called as a function.
-
-        The behavior is as same as ``select`` method.
-
-        :Example:
-
-            >>> f = compile('''
-            ... === ===
-            ...  x   y
-            ... === ===
-            ...  0   1
-            ...  *   0
-            ... === ===''')
-            >>> f(x=0)
-            Tuple(x=0, y=1)
-
-        """
-        return self.select(**condition)
-
     def select(self, **condition):
         """Return the first row that matches the condition.
 
