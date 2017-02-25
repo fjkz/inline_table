@@ -1,12 +1,26 @@
-=========================
-inline_table API document
-=========================
+========================================
+Python inline_table Module API Reference
+========================================
 
-Contents:
+.. automodule:: inline_table
 
-.. toctree::
+  .. autofunction:: compile
 
-    inline_table
+  .. autoclass:: Table
+
+    .. automethod:: select
+
+    .. automethod:: select_all
+
+    .. automethod:: contains
+
+    .. automethod:: iterator
+
+    .. automethod:: union
+
+    .. automethod:: join
+
+  .. autoclass:: TableMarkupError
 
 .. only:: html
 

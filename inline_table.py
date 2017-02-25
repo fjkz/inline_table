@@ -1,4 +1,4 @@
-"""Embedded text tables in Python code.
+"""inline-table - Embedded text tables in Python code.
 
 ``inline_table`` is a Python module for embedding text tables into
 source-code. We can write source-code just like a design document.
