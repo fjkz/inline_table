@@ -53,7 +53,7 @@ def compile(text, **variables):
         >>> table.select(age=24, gender='female')
         Tuple(age=24, gender='female', call='lady')
 
-    **Table Formats**:
+    **Table Text Formats**:
 
     ``inline_table`` supports the following format as a table text:
 
@@ -93,7 +93,7 @@ def compile(text, **variables):
     If a string in a cell of the table text equals a directive, the cell is
     evaluated as the special value.
 
-    Note that the string column type does not support special values.
+    Note that the string column type does not support the special values.
 
     **Column Types**:
 
@@ -116,8 +116,8 @@ def compile(text, **variables):
     =========== =============== =============================== ====
 
     A cell in a set column type represents multiple values. The upper table and
-    the lower table in the following act almost similarly (but not definitive
-    equally). ::
+    the lower table in the following act almost similarly (but not strictively
+    equal). ::
 
         ========= ===
         a (coll)   b
@@ -252,7 +252,7 @@ class Table:
         self.rows.append(self.Tuple(*row_values))
 
     def iterator(self):
-        """Return a iterator object.
+        """Return an iterator object.
 
         The ``iter`` build-in function and for-loops are also available.
 
