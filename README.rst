@@ -43,7 +43,9 @@ row in the table. The follow is an example: ::
     >>> table.select(age=24, gender='female')
     Tuple(age=24, gender='female', call='lady')
 
-See the API document for the detail of the usage.
+See `the API reference`_ for the detail of the usage.
+
+.. _the API reference: https://fjkz.github.io/inline_table/0.1
 
 Installation
 ============

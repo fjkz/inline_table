@@ -17,7 +17,7 @@ from docutils.parsers.rst.tableparser \
 from docutils.statemachine import StringList
 
 __docformat__ = 'reStructuredText'
-__version__ = '0.0'
+__version__ = '0.1.0'
 
 __all__ = ('compile', 'Table', 'TableMarkupError')
 

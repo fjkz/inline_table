@@ -4,8 +4,8 @@ from setuptools import setup
 
 
 setup(name='inline_table',
-      version='0.0',
-      description='Embed text tables into Python code',
+      version='0.1.0',
+      description='Embeded text tables in code',
       long_description=open('README.rst').read(),
       author='Kazuho Fujii',
       author_email='kazuho.fujii@gmail.com',
