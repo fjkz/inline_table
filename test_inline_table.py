@@ -645,8 +645,10 @@ class TestSelect(unittest.TestCase):
          1   1
         === ===
         """)
-        # TODO Change to LookupError
-        self.assertRaises(AttributeError, lambda: tb.select(C=1))
+        self.assertRaisesRegexp(
+            LookupError,
+            "Label 'C' is invalid",
+            lambda: tb.select(C=1))
 
 
 class TestSelectAll(unittest.TestCase):
@@ -674,6 +676,19 @@ class TestSelectAll(unittest.TestCase):
         self.assertEqual(len(ret), 2)
         self.assertEqual(ret[0], (1, 1))
         self.assertEqual(ret[1], (1, 2))
+
+    def test_invalid_label(self):
+        tb = compile("""
+        === ===
+         A   B
+        === ===
+         1   1
+        === ===
+        """)
+        self.assertRaisesRegexp(
+            LookupError,
+            "Label 'C' is invalid",
+            lambda: tb.select_all(C=1))
 
 
 class TestTable(unittest.TestCase):
@@ -711,11 +726,6 @@ class TestTable(unittest.TestCase):
         tb._insert(['value2A', 'value2B'])
         self.assertEqual(tb.select(keyB='value1B'), ('value1A', 'value1B'))
         self.assertEqual(tb.select(keyB='value2B'), ('value2A', 'value2B'))
-
-    def test_incorrect_label(self):
-        # TODO See Test_select.test_invalid_label
-        tb = Table()._initialize(['keyA', 'keyB'])
-        self.assertRaises(LookupError, lambda: tb.select(keyC=1))
 
 
 class TestUnion(unittest.TestCase):

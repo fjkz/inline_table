@@ -368,6 +368,7 @@ class Table:
         :param condition: pairs of a column label and its value
         :return: list of matched rows
         :rtype: list of named tuples
+        :raise LookupError: a key in the condition is invalid
 
         :Example:
 
@@ -400,11 +401,18 @@ class Table:
             return ', '.join(
                 [key + '=' + repr(value) for key, value in condition.items()])
 
+        def get_value(named_tuple, label):
+            """Wrapper of getattr build-in function."""
+            try:
+                return getattr(named_tuple, label)
+            except AttributeError:
+                raise LookupError("Label '%s' is invalid" % label)
+
         def match(row):
             """Return True if all values in the row match the condition."""
             for label, condition_value in condition.items():
-                row_value = getattr(row, label)
-                column_type = getattr(self.column_types, label)
+                row_value = get_value(row, label)
+                column_type = get_value(self.column_types, label)
                 if not column_type.match(row_value, condition_value):
                     return False
             return True
