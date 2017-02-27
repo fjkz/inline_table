@@ -645,10 +645,11 @@ class TestSelect(unittest.TestCase):
          1   1
         === ===
         """)
-        self.assertRaisesRegexp(
-            LookupError,
-            "Label 'C' is invalid",
-            lambda: tb.select(C=1))
+        try:
+            tb.select(C=1)
+            self.fail()
+        except LookupError as ok:
+            self.assertEqual(str(ok), "Label 'C' is invalid")
 
 
 class TestSelectAll(unittest.TestCase):
@@ -685,10 +686,11 @@ class TestSelectAll(unittest.TestCase):
          1   1
         === ===
         """)
-        self.assertRaisesRegexp(
-            LookupError,
-            "Label 'C' is invalid",
-            lambda: tb.select_all(C=1))
+        try:
+            tb.select_all(C=1)
+            self.fail()
+        except LookupError as ok:
+            self.assertEqual(str(ok), "Label 'C' is invalid")
 
 
 class TestTable(unittest.TestCase):
