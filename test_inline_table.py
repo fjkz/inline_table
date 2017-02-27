@@ -13,6 +13,10 @@ from inline_table import Format, ColumnType, WildCard, NotApplicable
 class TestDocutils(unittest.TestCase):
     """Check the behavior of docutils."""
 
+    def assertParsedTo(self, text, expected):
+        parsed = SimpleTableParser().parse(StringList(text.splitlines()))
+        self.assertEqual(parsed, expected)
+
     def test_docutils1(self):
         text = '''\
 === ===
@@ -20,19 +24,16 @@ class TestDocutils(unittest.TestCase):
 === ===
  1   2
 === ==='''
-        ret = SimpleTableParser().parse(StringList(text.splitlines()))
-        self.assertEqual(
-            ret,
-            (
-                [3, 3],
-                [
-                    [[0, 0, 1, ['a']], [0, 0, 1, ['b']]]
-                ],
-                [
-                    [[0, 0, 3, ['1']], [0, 0, 3, ['2']]]
-                ]
-            )
+        expected = (
+            [3, 3],
+            [
+                [[0, 0, 1, ['a']], [0, 0, 1, ['b']]]
+            ],
+            [
+                [[0, 0, 3, ['1']], [0, 0, 3, ['2']]]
+            ]
         )
+        self.assertParsedTo(text, expected)
 
     def test_docutils2(self):
         text = '''\
@@ -42,20 +43,17 @@ class TestDocutils(unittest.TestCase):
 === ===
  1   2
 === ==='''
-        ret = SimpleTableParser().parse(StringList(text.splitlines()))
-        self.assertEqual(
-            ret,
-            (
-                [3, 3],
-                [
-                    [[0, 0, 1, ['a']], [0, 0, 1, ['b']]],
-                    [[0, 0, 2, ['(A)']], [0, 0, 2, ['(B)']]]
-                ],
-                [
-                    [[0, 0, 4, ['1']], [0, 0, 4, ['2']]]
-                ]
-            )
+        expected = (
+            [3, 3],
+            [
+                [[0, 0, 1, ['a']], [0, 0, 1, ['b']]],
+                [[0, 0, 2, ['(A)']], [0, 0, 2, ['(B)']]]
+            ],
+            [
+                [[0, 0, 4, ['1']], [0, 0, 4, ['2']]]
+            ]
         )
+        self.assertParsedTo(text, expected)
 
     def test_docutils3(self):
         text = '''\
@@ -65,20 +63,17 @@ class TestDocutils(unittest.TestCase):
 === ===
  1   2
 === ==='''
-        ret = SimpleTableParser().parse(StringList(text.splitlines()))
-        self.assertEqual(
-            ret,
-            (
-                [3, 3],
-                [
-                    [[0, 0, 1, ['a']], [0, 0, 1, ['b']]],
-                    [[0, 0, 2, ['(A)']], [0, 0, 2, ['']]]
-                ],
-                [
-                    [[0, 0, 4, ['1']], [0, 0, 4, ['2']]]
-                ]
-            )
+        expected = (
+            [3, 3],
+            [
+                [[0, 0, 1, ['a']], [0, 0, 1, ['b']]],
+                [[0, 0, 2, ['(A)']], [0, 0, 2, ['']]]
+            ],
+            [
+                [[0, 0, 4, ['1']], [0, 0, 4, ['2']]]
+            ]
         )
+        self.assertParsedTo(text, expected)
 
     def test_docutils4(self):
         text = '''\
@@ -88,19 +83,16 @@ class TestDocutils(unittest.TestCase):
 === ===
  1   2
 === ==='''
-        ret = SimpleTableParser().parse(StringList(text.splitlines()))
-        self.assertEqual(
-            ret,
-            (
-                [3, 3],
-                [
-                    [[0, 0, 1, ['a', '']], [0, 0, 1, [' b', '(B)']]]
-                ],
-                [
-                    [[0, 0, 4, ['1']], [0, 0, 4, ['2']]]
-                ]
-            )
+        expected = (
+            [3, 3],
+            [
+                [[0, 0, 1, ['a', '']], [0, 0, 1, [' b', '(B)']]]
+            ],
+            [
+                [[0, 0, 4, ['1']], [0, 0, 4, ['2']]]
+            ]
         )
+        self.assertParsedTo(text, expected)
 
         # NOTE:
         # Position of '(B)' is different from other cases.
@@ -114,20 +106,17 @@ class TestDocutils(unittest.TestCase):
 === === ===
  1   2   3
 === === ==='''
-        ret = SimpleTableParser().parse(StringList(text.splitlines()))
-        self.assertEqual(
-            ret,
-            (
-                [3, 3, 3],
-                [
-                    [[0, 0, 1, ['a']], [0, 0, 1, ['b']], [0, 0, 1, ['c']]],
-                    [[0, 0, 2, ['(A)']], [0, 0, 2, ['']], [0, 0, 2, ['']]]
-                ],
-                [
-                    [[0, 0, 4, ['1']], [0, 0, 4, ['2']], [0, 0, 4, ['3']]]
-                ]
-            )
+        expected = (
+            [3, 3, 3],
+            [
+                [[0, 0, 1, ['a']], [0, 0, 1, ['b']], [0, 0, 1, ['c']]],
+                [[0, 0, 2, ['(A)']], [0, 0, 2, ['']], [0, 0, 2, ['']]]
+            ],
+            [
+                [[0, 0, 4, ['1']], [0, 0, 4, ['2']], [0, 0, 4, ['3']]]
+            ]
         )
+        self.assertParsedTo(text, expected)
 
     def test_docutils6(self):
         text = '''\
@@ -137,20 +126,17 @@ class TestDocutils(unittest.TestCase):
 === === ===
  1   2   3
 === === ==='''
-        ret = SimpleTableParser().parse(StringList(text.splitlines()))
-        self.assertEqual(
-            ret,
-            (
-                [3, 3, 3],
-                [
-                    [[0, 0, 1, ['a', '']], [0, 0, 1, [' b', '(B)']],
-                     [0, 0, 1, ['c', '']]]
-                ],
-                [
-                    [[0, 0, 4, ['1']], [0, 0, 4, ['2']], [0, 0, 4, ['3']]]
-                ]
-            )
+        expected = (
+            [3, 3, 3],
+            [
+                [[0, 0, 1, ['a', '']], [0, 0, 1, [' b', '(B)']],
+                 [0, 0, 1, ['c', '']]]
+            ],
+            [
+                [[0, 0, 4, ['1']], [0, 0, 4, ['2']], [0, 0, 4, ['3']]]
+            ]
         )
+        self.assertParsedTo(text, expected)
 
     def test_docutils7(self):
         text = '''\
@@ -160,20 +146,17 @@ class TestDocutils(unittest.TestCase):
 === === ===
  1   2   3
 === === ==='''
-        ret = SimpleTableParser().parse(StringList(text.splitlines()))
-        self.assertEqual(
-            ret,
-            (
-                [3, 3, 3],
-                [
-                    [[0, 0, 1, ['a', '']], [0, 0, 1, ['b', '']],
-                     [0, 0, 1, [' c', '(C)']]]
-                ],
-                [
-                    [[0, 0, 4, ['1']], [0, 0, 4, ['2']], [0, 0, 4, ['3']]]
-                ]
-            )
+        expected = (
+            [3, 3, 3],
+            [
+                [[0, 0, 1, ['a', '']], [0, 0, 1, ['b', '']],
+                 [0, 0, 1, [' c', '(C)']]]
+            ],
+            [
+                [[0, 0, 4, ['1']], [0, 0, 4, ['2']], [0, 0, 4, ['3']]]
+            ]
         )
+        self.assertParsedTo(text, expected)
 
     def test_docutils8(self):
         text = '''\
@@ -183,214 +166,218 @@ class TestDocutils(unittest.TestCase):
  1   2
      3
 === ==='''
-        ret = SimpleTableParser().parse(StringList(text.splitlines()))
-        self.assertEqual(
-            ret,
-            (
-                [3, 3],
-                [
-                    [[0, 0, 1, ['a']], [0, 0, 1, ['b']]]
-                ],
-                [
-                    [[0, 0, 3, ['1', '']], [0, 0, 3, ['2', '3']]]
-                ]
-            )
+        expected = (
+            [3, 3],
+            [
+                [[0, 0, 1, ['a']], [0, 0, 1, ['b']]]
+            ],
+            [
+                [[0, 0, 3, ['1', '']], [0, 0, 3, ['2', '3']]]
+            ]
         )
+        self.assertParsedTo(text, expected)
 
 
 class TestFormatEstimation(unittest.TestCase):
 
+    def assertEstimatedTo(self, lines, expected):
+        fmt = Format.estimate_format(lines)
+        self.assertTrue(fmt is expected)
+
     def test_simple_table1(self):
-        fmt = Format.estimate_format(['=== ===\n'] * 3)
-        self.assertTrue(fmt is Format.REST_SIMPLE_TABLE)
+        self.assertEstimatedTo(
+            ['=== ===\n'] * 3,
+            Format.REST_SIMPLE_TABLE)
 
     def test_simple_table2(self):
-        fmt = Format.estimate_format(['==\n'] * 3)
-        self.assertTrue(fmt is Format.REST_SIMPLE_TABLE)
+        self.assertEstimatedTo(
+            ['==\n'] * 3,
+            Format.REST_SIMPLE_TABLE)
 
     def test_grid_table1(self):
-        fmt = Format.estimate_format(['+---+---+\n',
-                                      '+===+===+\n',
-                                      '+---+---+\n'])
-        self.assertTrue(fmt is Format.REST_GRID_TABLE)
+        self.assertEstimatedTo(
+            ['+---+---+\n',
+             '+===+===+\n',
+             '+---+---+\n'],
+            Format.REST_GRID_TABLE)
 
     def test_grid_table2(self):
-        fmt = Format.estimate_format(['+--+\n',
-                                      '+==+\n',
-                                      '+--+'])
-        self.assertTrue(fmt is Format.REST_GRID_TABLE)
+        self.assertEstimatedTo(
+            ['+--+\n',
+             '+==+\n',
+             '+--+'],
+            Format.REST_GRID_TABLE)
 
     def test_markdown1(self):
-        fmt = Format.estimate_format(['| a | b |\n',
-                                      '|---|---|\n',
-                                      '| c | d |\n'])
-        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+        self.assertEstimatedTo(
+            ['| a | b |\n',
+             '|---|---|\n',
+             '| c | d |\n'],
+            Format.MARKDOWN_TABLE)
 
     def test_markdown2(self):
-        fmt = Format.estimate_format(['| a | b |\n',
-                                      '| - | - |\n',
-                                      '| c | d |\n'])
-        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+        self.assertEstimatedTo(
+            ['| a | b |\n',
+             '| - | - |\n',
+             '| c | d |\n'],
+            Format.MARKDOWN_TABLE)
 
     def test_markdown3(self):
-        fmt = Format.estimate_format(['| a | b |\n',
-                                      '|:- | -:|\n',
-                                      '| c | d |\n'])
-        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+        self.assertEstimatedTo(
+            ['| a | b |\n',
+             '|:- | -:|\n',
+             '| c | d |\n'],
+            Format.MARKDOWN_TABLE)
 
     def test_markdown4(self):
-        fmt = Format.estimate_format([' a | b \n',
-                                      '---|---\n',
-                                      ' c | d \n'])
-        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+        self.assertEstimatedTo(
+            [' a | b \n',
+             '---|---\n',
+             ' c | d \n'],
+            Format.MARKDOWN_TABLE)
 
     def test_markdown5(self):
-        fmt = Format.estimate_format(['a | b | c \n',
-                                      ':--- |:--- |: ---\n',
-                                      'c | d | e \n'])
-        self.assertTrue(fmt is Format.MARKDOWN_TABLE)
+        self.assertEstimatedTo(
+            ['a | b | c \n',
+             ':--- |:--- |: ---\n',
+             'c | d | e \n'],
+            Format.MARKDOWN_TABLE)
 
     def test_invalid_format1(self):
-        try:
-            Format.estimate_format(['aaa'])
-            self.fail()
-        except TableMarkupError:
-            pass
+        self.assertRaises(TableMarkupError,
+                          lambda: Format.estimate_format(['aaa']))
 
     def test_invalid_format2(self):
-        try:
-            Format.estimate_format(['==='])
-            self.fail()
-        except TableMarkupError:
-            pass
+        self.assertRaises(TableMarkupError,
+                          lambda: Format.estimate_format(['===']))
 
 
 class TestSimpleTableParser(unittest.TestCase):
 
-    parser = Format.REST_SIMPLE_TABLE
+    def assertParsedTo(self, text, expected):
+        parser = Format.REST_SIMPLE_TABLE
+        ret = parser.parse(text.splitlines())
+        self.assertEqual(ret, expected)
 
     def test_attrs1(self):
-        ret = self.parser.parse('''\
+        text = '''\
 === ===
  a   b
 (A) (B)
 === ===
  1   2
-=== ==='''.splitlines())
-        self.assertEqual(ret, (['a (A)', 'b (B)'], [['1', '2']]))
+=== ==='''
+        self.assertParsedTo(text, (['a (A)', 'b (B)'], [['1', '2']]))
 
     def test_attrs2(self):
-        ret = self.parser.parse('''\
+        text = '''\
 === ===
  a   b
 (A)
 === ===
  1   2
-=== ==='''.splitlines())
-        self.assertEqual(ret, (['a (A)', 'b'], [['1', '2']]))
+=== ==='''
+        self.assertParsedTo(text, (['a (A)', 'b'], [['1', '2']]))
 
     def test_attrs3(self):
-        ret = self.parser.parse('''\
+        text = '''\
 === ===
  a   b
     (B)
 === ===
  1   2
-=== ==='''.splitlines())
-        self.assertEqual(ret, (['a', 'b (B)'], [['1', '2']]))
+=== ==='''
+        self.assertParsedTo(text, (['a', 'b (B)'], [['1', '2']]))
 
     def test_two_linebody(self):
-        ret = self.parser.parse('''\
+        text = '''\
 === ===
  a   b
 === ===
  1   2
      3
-=== ==='''.splitlines())
-        self.assertEqual(ret, (['a', 'b'], [['1', '2 3']]))
+=== ==='''
+        self.assertParsedTo(text, (['a', 'b'], [['1', '2 3']]))
 
 
 class TestGridTableParser(unittest.TestCase):
 
-    parser = Format.REST_GRID_TABLE
+    def assertParsedTo(self, text, expected):
+        parser = Format.REST_GRID_TABLE
+        ret = parser.parse(text.splitlines())
+        self.assertEqual(ret, expected)
 
     def test_attrs1(self):
-        ret = self.parser.parse('''\
+        text = '''\
 +---+---+
 | a | b |
 |(A)|(B)|
 +===+===+
 | 1 | 2 |
-+---+---+'''.splitlines())
-        self.assertEqual(ret, (['a (A)', 'b (B)'], [['1', '2']]))
++---+---+'''
+        self.assertParsedTo(text, (['a (A)', 'b (B)'], [['1', '2']]))
 
     def test_attrs2(self):
-        ret = self.parser.parse('''\
+        text = '''\
 +---+---+
 | a | b |
 |(A)|   |
 +===+===+
 | 1 | 2 |
-+---+---+'''.splitlines())
-        self.assertEqual(ret, (['a (A)', 'b'], [['1', '2']]))
++---+---+'''
+        self.assertParsedTo(text, (['a (A)', 'b'], [['1', '2']]))
 
     def test_attrs3(self):
-        ret = self.parser.parse('''\
+        text = '''\
 +---+---+
 | a | b |
 |   |(B)|
 +===+===+
 | 1 | 2 |
-+---+---+'''.splitlines())
-        self.assertEqual(ret, (['a', 'b (B)'], [['1', '2']]))
++---+---+'''
+        self.assertParsedTo(text, (['a', 'b (B)'], [['1', '2']]))
 
     def test_two_linebody(self):
-        ret = self.parser.parse('''\
+        text = '''\
 +---+---+
 | a | b |
 +===+===+
 | 1 | 2 |
 |   | 3 |
-+---+---+'''.splitlines())
-        self.assertEqual(ret, (['a', 'b'], [['1', '2 3']]))
++---+---+'''
+        self.assertParsedTo(text, (['a', 'b'], [['1', '2 3']]))
 
 
 class TestMarkdownParser(unittest.TestCase):
 
-    parser = Format.MARKDOWN_TABLE
+    def assertParsedTo(self, text, expected):
+        parser = Format.MARKDOWN_TABLE
+        ret = parser.parse(text.splitlines())
+        self.assertEqual(ret, expected)
 
     def test_not_pretty(self):
-        ret = self.parser.parse('''\
+        text = '''\
 A | B | C |
 ---|:---|---:
 a | b | c
 1 | 2 | 3
-'''.splitlines())
-        self.assertEqual(
-            ret,
+'''
+        self.assertParsedTo(
+            text,
             (['A', 'B', 'C'], [['a', 'b', 'c'], ['1', '2', '3']]))
 
     def test_no_space(self):
-        ret = self.parser.parse('''\
+        text = '''\
 |A|B|
 |-|-|
 |1|2|
-'''.splitlines())
-        self.assertEqual(
-            ret,
+'''
+        self.assertParsedTo(
+            text,
             (['A', 'B'], [['1', '2']]))
 
 
 class TestCompile(unittest.TestCase):
-
-    def test_compile_with_format(self):
-        tb = compile('''
-        +---+---+
-        | a | b |
-        +===+===+
-        | 1 | a |
-        +---+---+''', a=1)
-        tb.select(a=1, b=1)
 
     def test_operator(self):
         tb = compile("""
@@ -400,8 +387,7 @@ class TestCompile(unittest.TestCase):
          1   1   1 + 1
         === === ========
         """)
-        ret = tb.select(a=1, b=1).aplusb
-        self.assertEqual(ret, 2)
+        self.assertEqual(tb.select(a=1, b=1).aplusb, 2)
 
     def test_variable(self):
         tb = compile("""
@@ -413,11 +399,8 @@ class TestCompile(unittest.TestCase):
         === ===
         """, a=1, b=2)
 
-        ret = tb.select(A=1).B
-        self.assertEqual(ret, 1)
-
-        ret = tb.select(A=2).B
-        self.assertEqual(ret, 2)
+        self.assertEqual(tb.select(A=1).B, 1)
+        self.assertEqual(tb.select(A=2).B, 2)
 
     def test_builtin(self):
         tb = compile("""
@@ -427,34 +410,38 @@ class TestCompile(unittest.TestCase):
         str(1)
         ======
         """)
-        ret = tb.select(A='1')
-        self.assertEqual(ret, ('1',))
+        self.assertEqual(tb.select(A='1'), ('1',))
 
     def test_variable_leak1(self):
-        try:
-            compile("""
-            ===
-             A
-            ===
-            re
-            ===
-            """)
-            self.fail()
-        except NameError as _ok:
-            pass
+        self.assertRaises(
+            NameError,
+            lambda: compile("""
+                ===
+                 A
+                ===
+                re
+                ===
+                """))
 
     def test_variable_leak2(self):
-        try:
-            compile("""
-            =====
-             A
-            =====
-            table
-            =====
-            """)
-            self.fail()
-        except NameError as _ok:
-            pass
+        self.assertRaises(
+            NameError,
+            lambda: compile("""
+                =====
+                 A
+                =====
+                table
+                =====
+                """))
+
+    def test_grid_table(self):
+        tb = compile('''
+        +---+---+
+        | a | b |
+        +===+===+
+        | 1 | a |
+        +---+---+''', a=1)
+        self.assertEqual(tb.select(a=1, b=1), (1, 1))
 
     def test_markdown1(self):
         t = compile('''
@@ -462,8 +449,7 @@ class TestCompile(unittest.TestCase):
         |---|---|---|---|
         | 1 | 2 | 3 | 4 |
         ''')
-        ret = t.select(A=1)
-        self.assertEqual(ret, (1, 2, 3, 4))
+        self.assertEqual(t.select(A=1), (1, 2, 3, 4))
 
     def test_markdown2(self):
         t = compile('''
@@ -471,19 +457,137 @@ class TestCompile(unittest.TestCase):
          ---|---|---|---
           1 | 2 | 3 | 4
         ''')
-        ret = t.select(A=1)
-        self.assertEqual(ret, (1, 2, 3, 4))
+        self.assertEqual(t.select(A=1), (1, 2, 3, 4))
 
     def test_invalid_directive(self):
-        try:
-            compile('''
+        self.assertRaises(
+            TableMarkupError,
+            lambda: compile('''
                 | A (foo) |
                 |---------|
                 | a       |
-                ''')
-            self.fail()
-        except TableMarkupError as _ok:
-            pass
+                '''))
+
+
+class TestColumnType(unittest.TestCase):
+
+    def test_oneline(self):
+        tb = compile('''
+            ==========
+             a (value)
+            ==========
+             1
+            ==========''')
+        self.assertEqual(tb.select(a=1), (1,))
+
+    def test_value(self):
+        tb = compile('''
+            =========
+             a
+            (value)
+            =========
+             1
+             2
+            =========''')
+        self.assertEqual(tb.select(a=1), (1,))
+        self.assertEqual(tb.select(a=2), (2,))
+
+    def test_condition(self):
+        tb = compile('''
+            =========== =====
+             a           b
+            (condition)
+            =========== =====
+            a < 0       True
+            0 <= a      False
+            =========== =====''')
+        self.assertEqual(tb.select(a=-1), (-1, True))
+        self.assertEqual(tb.select(a=1), (1, False))
+
+    def test_condition_right(self):
+        tb = compile('''
+            ===== ===========
+             a     b
+                  (condition)
+            ===== ===========
+            True   b < 0
+            False  b >= 0
+            ===== ===========''')
+        self.assertEqual(tb.select(b=-1), (True, -1))
+        self.assertEqual(tb.select(b=1), (False, 1))
+
+    def test_consition_wildcard(self):
+        tb = compile('''
+            =========== =====
+             a           b
+            (condition)
+            =========== =====
+            a < 0       True
+            *           False
+            =========== =====''')
+        self.assertEqual(tb.select(a=-1), (-1, True))
+        self.assertEqual(tb.select(a=1), (1, False))
+
+    def test_consition_na(self):
+        tb = compile('''
+            =========== =====
+             a           b
+            (condition)
+            =========== =====
+            N/A         True
+            0 <= a      False
+            =========== =====''')
+        self.assertRaises(LookupError, lambda: tb.select(a=-1))
+        self.assertEqual(tb.select(a=1), (1, False))
+
+    def test_cond(self):
+        tb = compile('''
+            ====== ===
+              A     B
+            (cond)
+            ====== ===
+            A == 1  1
+            A == 2  2
+            ====== ===''')
+        self.assertEqual(tb.select(A=1), (1, 1))
+        self.assertEqual(tb.select(A=2), (2, 2))
+        self.assertRaises(LookupError, lambda: tb.select(A=-1))
+
+    def test_string(self):
+        tb = compile('''
+            ======== =====
+            A        B
+            (string) (str)
+            ======== =====
+            AAAAAAAA BBBBB
+            aaaaaaaa bbbbb
+            ======== =====''')
+        self.assertEqual(tb.select(A='AAAAAAAA'), ('AAAAAAAA', 'BBBBB'))
+
+    def test_regex(self):
+        tb = compile('''
+            ======== =
+             A       B
+            (regex)
+            ======== =
+            r'^a+b$' 1
+            r'b'     2
+            N/A      3
+            *        4
+            ======== =''')
+        self.assertEqual(tb.select(A='aab'), ('aab', 1))
+        self.assertEqual(tb.select(A='abb'), ('abb', 4))
+
+    def test_collection(self):
+        tb = compile('''
+        | S(coll) | V |
+        |---------|---|
+        | 1, 2    | 1 |
+        | N/A     | 2 |
+        |  *      | 3 |''')
+        self.assertEqual(tb.select(S=1), (1, 1))
+        self.assertEqual(tb.select(S=2), (2, 1))
+        self.assertEqual(tb.select(S=3), (3, 3))
 
 
 class TestSelect(unittest.TestCase):
@@ -510,11 +614,7 @@ class TestSelect(unittest.TestCase):
          1  N/A
         === ===
         """)
-        try:
-            tb.select(A=1)
-            self.fail()
-        except LookupError as _ok:
-            pass
+        self.assertRaises(LookupError, lambda: tb.select(A=1))
 
     def test_na_for_key(self):
         tb = compile("""
@@ -525,8 +625,7 @@ class TestSelect(unittest.TestCase):
          1   2
         === ===
         """)
-        ret = tb.select(A=1)
-        self.assertEqual(ret, (1, 2))
+        self.assertEqual(tb.select(A=1), (1, 2))
 
     def test_no_arg(self):
         tb = compile("""
@@ -536,11 +635,18 @@ class TestSelect(unittest.TestCase):
          1   1
         === ===
         """)
-        try:
-            tb.select()
-            self.fail()
-        except LookupError as _ok:
-            pass
+        self.assertRaises(LookupError, lambda: tb.select())
+
+    def test_invalid_label(self):
+        tb = compile("""
+        === ===
+         A   B
+        === ===
+         1   1
+        === ===
+        """)
+        # TODO Change to LookupError
+        self.assertRaises(AttributeError, lambda: tb.select(C=1))
 
 
 class TestSelectAll(unittest.TestCase):
@@ -553,8 +659,7 @@ class TestSelectAll(unittest.TestCase):
          1   1
         === ===
         """)
-        ret = tb.select_all(A=2)
-        self.assertEqual(ret, [])
+        self.assertEqual(tb.select_all(A=2), [])
 
     def test_no_arg(self):
         tb = compile("""
@@ -566,6 +671,7 @@ class TestSelectAll(unittest.TestCase):
         === ===
         """)
         ret = tb.select_all()
+        self.assertEqual(len(ret), 2)
         self.assertEqual(ret[0], (1, 1))
         self.assertEqual(ret[1], (1, 2))
 
@@ -574,59 +680,42 @@ class TestTable(unittest.TestCase):
 
     def test_labels(self):
         tb = Table()._initialize(['keyA', 'keyB', 'keyC'])
-        ret = tb._labels
-        self.assertEqual(ret, ('keyA', 'keyB', 'keyC'))
+        self.assertEqual(tb._labels, ('keyA', 'keyB', 'keyC'))
 
     def test_one_key_no_value(self):
         tb = Table()._initialize(['key'])
-        try:
-            tb.select(key='value')
-            self.fail()
-        except LookupError as _ok:
-            pass
+        self.assertRaises(LookupError, lambda: tb.select(key='value'))
 
     def test_one_key_one_value(self):
         tb = Table()._initialize(['key'])
         tb._insert(['value'])
-
-        ret = tb.select(key='value')
-
-        self.assertEqual(ret, ('value',))
+        self.assertEqual(tb.select(key='value'), ('value',))
 
     def test_one_key_two_value(self):
         tb = Table()._initialize(['key'])
         tb._insert(['value1'])
         tb._insert(['value2'])
-
-        ret = tb.select(key='value1')
-
-        self.assertEqual(ret, ('value1',))
+        self.assertEqual(tb.select(key='value1'), ('value1',))
+        self.assertEqual(tb.select(key='value2'), ('value2',))
 
     def test_two_key_two_value1(self):
         tb = Table()._initialize(['keyA', 'keyB'])
         tb._insert(['value1A', 'value1B'])
         tb._insert(['value2A', 'value2B'])
-
-        ret = tb.select(keyA='value1A')
-
-        self.assertEqual(ret, ('value1A', 'value1B'))
+        self.assertEqual(tb.select(keyA='value1A'), ('value1A', 'value1B'))
+        self.assertEqual(tb.select(keyA='value2A'), ('value2A', 'value2B'))
 
     def test_two_key_two_value2(self):
         tb = Table()._initialize(['keyA', 'keyB'])
         tb._insert(['value1A', 'value1B'])
         tb._insert(['value2A', 'value2B'])
-
-        ret = tb.select(keyB='value2B')
-
-        self.assertEqual(ret, ('value2A', 'value2B'))
+        self.assertEqual(tb.select(keyB='value1B'), ('value1A', 'value1B'))
+        self.assertEqual(tb.select(keyB='value2B'), ('value2A', 'value2B'))
 
     def test_incorrect_label(self):
+        # TODO See Test_select.test_invalid_label
         tb = Table()._initialize(['keyA', 'keyB'])
-        try:
-            tb.select(keyC=1)
-            self.fail()
-        except LookupError as _ok:
-            pass
+        self.assertRaises(LookupError, lambda: tb.select(keyC=1))
 
 
 class TestUnion(unittest.TestCase):
@@ -690,8 +779,12 @@ class TestUnion(unittest.TestCase):
                 "Labels of the tables are different: ('a', 'b') != ('a', 'c')")
 
     def test_column_types_diff(self):
-        t1 = Table()._initialize(['a', 'b'], [ColumnType.Value(), ColumnType.Condition()])
-        t2 = Table()._initialize(['a', 'b'], [ColumnType.Value(), ColumnType.String()])
+        t1 = Table()._initialize(
+            ['a', 'b'],
+            [ColumnType.Value(), ColumnType.Condition()])
+        t2 = Table()._initialize(
+            ['a', 'b'],
+            [ColumnType.Value(), ColumnType.String()])
         try:
             t1 + t2
             self.fail()
@@ -729,11 +822,7 @@ class TestJoin(unittest.TestCase):
         it = iter(t3)
         self.assertEqual(next(it), (1, 1, 2, 3))
         self.assertEqual(next(it), (1, 1, 2, 4))
-        try:
-            next(it)
-            self.fail()
-        except StopIteration:
-            pass
+        assertIterationStop(it)
 
     def test_join_zero_col(self):
         t1 = compile('''
@@ -876,12 +965,9 @@ class TestJoin(unittest.TestCase):
         | A < 2    | 0 |
         | *        | 1 |''')
         t3 = t1 * t2
-        ret = t3.select(A=-1)
-        self.assertEqual(ret, (-1, 1, 0))
-        ret = t3.select(A=1)
-        self.assertEqual(ret, (1, 0, 0))
-        ret = t3.select(A=3)
-        self.assertEqual(ret, (3, 0, 1))
+        self.assertEqual(t3.select(A=-1), (-1, 1, 0))
+        self.assertEqual(t3.select(A=1), (1, 0, 0))
+        self.assertEqual(t3.select(A=3), (3, 0, 1))
 
     def test_collection_both(self):
         t1 = compile('''
@@ -897,137 +983,6 @@ class TestJoin(unittest.TestCase):
         self.assertTrue((2, 0, 1) in t3)
         self.assertTrue((3, 0, 1) in t3)
         self.assertFalse((4, 0, 1) in t3)
-
-
-class TestColumnType(unittest.TestCase):
-
-    def test_oneline(self):
-        tb = compile('''
-            ==========
-             a (value)
-            ==========
-             1
-            ==========''')
-        ret = tb.select(a=1)
-        self.assertEqual(ret, (1,))
-
-    def test_value(self):
-        tb = compile('''
-            =========
-             a
-            (value)
-            =========
-             1
-             2
-            =========''')
-        ret = tb.select(a=1)
-        self.assertEqual(ret, (1,))
-
-    def test_condition(self):
-        tb = compile('''
-            =========== =====
-             a           b
-            (condition)
-            =========== =====
-            a < 0       True
-            0 <= a      False
-            =========== =====''')
-        ret = tb.select(a=-1)
-        self.assertEqual(ret, (-1, True))
-        ret = tb.select(a=1)
-        self.assertEqual(ret, (1, False))
-
-    def test_condition_right(self):
-        tb = compile('''
-            ===== ===========
-             a     b
-                  (condition)
-            ===== ===========
-            True   b < 0
-            False  b >= 0
-            ===== ===========''')
-        ret = tb.select(b=-1)
-        self.assertEqual(ret, (True, -1))
-        ret = tb.select(b=1)
-        self.assertEqual(ret, (False, 1))
-
-    def test_consition_wildcard(self):
-        tb = compile('''
-            =========== =====
-             a           b
-            (condition)
-            =========== =====
-            a < 0       True
-            *           False
-            =========== =====''')
-        ret = tb.select(a=1)
-        self.assertEqual(ret, (1, False))
-
-    def test_consition_na(self):
-        tb = compile('''
-            =========== =====
-             a           b
-            (condition)
-            =========== =====
-            N/A         True
-            0 <= a      False
-            =========== =====''')
-        ret = tb.select(a=1)
-        self.assertEqual(ret, (1, False))
-
-    def test_cond(self):
-        tb = compile('''
-            ====== ===
-              A     B
-            (cond)
-            ====== ===
-            A == 1  1
-            A == 2  2
-            ====== ===''')
-        ret = tb.select(A=1)
-        self.assertEqual(ret, (1, 1))
-
-    def test_string(self):
-        tb = compile('''
-            ======== =====
-            A        B
-            (string) (str)
-            ======== =====
-            AAAAAAAA BBBBB
-            aaaaaaaa bbbbb
-            ======== =====''')
-        ret = tb.select(A='AAAAAAAA')
-        self.assertEqual(ret, ('AAAAAAAA', 'BBBBB'))
-
-    def test_regex(self):
-        tb = compile('''
-            ======== =
-             A       B
-            (regex)
-            ======== =
-            r'^a+b$' 1
-            r'b'     2
-            N/A      3
-            *        4
-            ======== =''')
-        ret1 = tb.select(A='aab')
-        self.assertEqual(ret1, ('aab', 1))
-        ret2 = tb.select(A='abb')
-        self.assertEqual(ret2, ('abb', 4))
-
-    def test_collection(self):
-        tb = compile('''
-        | S(coll) | V |
-        |---------|---|
-        | 1, 2    | 1 |
-        | N/A     | 2 |
-        |  *      | 3 |''')
-        ret1 = tb.select(S=1)
-        self.assertEqual(ret1, (1, 1))
-        ret1 = tb.select(S=2)
-        self.assertEqual(ret1, (2, 1))
-        ret1 = tb.select(S=3)
-        self.assertEqual(ret1, (3, 3))
 
 
 class TestIterable(unittest.TestCase):
