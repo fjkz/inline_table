@@ -525,7 +525,7 @@ class Table:
                 try:
                     ctype = getattr(table.column_types, label)
                 except AttributeError:
-                    ctype = ColumnType._NoneType()
+                    ctype = ColumnType._Virtual()
                 ctypes.append(ctype)
             return ctypes
 
@@ -782,10 +782,10 @@ class ColumnType:
     # Following classes are used in Table.join
     #
 
-    class _NoneType(Value):
+    class _Virtual(Value):
 
         def evaluate(self, expression, variables, label):
-            assert False, 'Cannot call _NoneType.evaluate'
+            assert False, 'Cannot call _Virtual.evaluate'
 
     class _ValueJoinValue(Value):
 
