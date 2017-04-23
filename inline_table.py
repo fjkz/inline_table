@@ -533,9 +533,9 @@ class Table:
         # left column types    val    cond   str    regex  coll
         # left column types           regex  str    cond   value  coll
         #
-        # --> Fill with NONE
-        # left column types    val    cond   str    regex  coll   NONE
-        # left column types    NONE   regex  str    cond   value  coll
+        # --> Fill with Virtual
+        # left column types    val    cond   str    regex  coll   Virt
+        # left column types    Virt   regex  str    cond   value  coll
         #
         # --> Take join (Info about regex, str or coll are ommited)
         # union column types   val    cond   val    cond   cond   cond
