@@ -31,7 +31,7 @@ row in the table. The follow is an example: ::
     ... age (cond)   gender   call (str)
     ... ============ ======== ==========
     ...  0 <= a < 2   *       baby
-    ...  0 <= a < 7   *       kid
+    ...  2 <= a < 7   *       kid
     ...  7 <= a < 18  M       boy
     ...  7 <= a < 16  F       girl
     ... 18 <= a       M       gentleman
