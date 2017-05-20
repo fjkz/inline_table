@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eux -o pipefail
 cd $(dirname ${BASH_SOURCE:-$0})/..
 
 python2 --version >&2
