@@ -138,7 +138,7 @@ def compile(text, **variables):
     lines = strip_lines(lines)
     fmt = Format.estimate_format(lines)
     labels, rows = fmt.parse(lines)
-    column_types = ['' for _ in range(len(labels))]
+    column_types = ['' for _ in enumerate(labels)]
 
     # Move '(...)' word from labels to column_types.
     # e.g.,
@@ -323,8 +323,7 @@ class Table:
             if len(values) != self._num_columns:
                 return False
             condition = {}
-            for i in range(self._num_columns):
-                label = self._labels[i]
+            for i, label in enumerate(self._labels):
                 condition[label] = values[i]
         else:
             return False
