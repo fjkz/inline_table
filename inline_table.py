@@ -621,8 +621,7 @@ class ColumnType:
         def join(self, other):
             if other.is_set:
                 return ColumnType._ValueJoinSet(self, other)
-            else:
-                return ColumnType._ValueJoinValue(self, other)
+            return ColumnType._ValueJoinValue(self, other)
 
         def match(self, a, b):
             return a == b
@@ -637,8 +636,7 @@ class ColumnType:
         def join(self, other):
             if other.is_set:
                 return ColumnType._SetJoinSet(self, other)
-            else:
-                return ColumnType._SetJoinValue(self, other)
+            return ColumnType._SetJoinValue(self, other)
 
         def match(self, a, b):
             assert False, 'Not Implemented'
@@ -750,8 +748,7 @@ class ColumnType:
         def match(self, a, b):
             if a.match(b):
                 return True
-            else:
-                return False
+            return False
 
     class Collection(_SetBase):
         """Collection."""
@@ -775,8 +772,7 @@ class ColumnType:
         def match(self, a, b):
             if b in a:
                 return True
-            else:
-                return False
+            return False
 
     #
     # Following classes are used in Table.join
@@ -1010,8 +1006,7 @@ class Format:
             if (re.match(line_pattern, first_line) and
                     re.match(line_pattern, last_line)):
                 return True
-            else:
-                return False
+            return False
 
         @classmethod
         def parse(cls, lines, parser):
@@ -1129,10 +1124,9 @@ class Format:
             """Judge if the table is estimated to be this format."""
             if len(lines) < 3:
                 return False
-            elif re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]):
+            if re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]):
                 return True
-            else:
-                return False
+            return False
 
         @classmethod
         def __split_cell(cls, line):
