@@ -312,7 +312,7 @@ class Table:
         """
         if isinstance(values, dict):
             condition = values
-        elif isinstance(values, list) or isinstance(values, tuple):
+        elif isinstance(values, (list, tuple)):
             if len(values) != self._num_columns:
                 return False
             condition = {}
