@@ -202,7 +202,7 @@ class Table:
     def __init__(self):
         """Initialize this object."""
         # These values are to be initialized in _initialize method."
-        self.Tuple = None
+        self.tuple_class = None
         self.column_types = None
         self.rows = None
 
@@ -219,11 +219,11 @@ class Table:
         # Create a type of named tuple.
         # We name the type name as 'Tuple'. Traditionally, the row of
         # relational database is called tuple and it has attributes.
-        self.Tuple = collections.namedtuple('Tuple', labels)
+        self.tuple_class = collections.namedtuple('Tuple', labels)
 
         if not column_types:
             column_types = [ColumnType.Value() for _ in labels]
-        self.column_types = self.Tuple(*column_types)
+        self.column_types = self.tuple_class(*column_types)
         self.rows = []
         return self
 
@@ -256,7 +256,7 @@ class Table:
 
         :param row_values: list of values in a row
         """
-        self.rows.append(self.Tuple(*row_values))
+        self.rows.append(self.tuple_class(*row_values))
 
     def iterator(self):
         """Return an iterator object.
