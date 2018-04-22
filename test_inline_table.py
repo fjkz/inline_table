@@ -7,7 +7,7 @@ from docutils.statemachine import StringList
 
 import inline_table
 from inline_table import *
-from inline_table import Format, ColumnType, WILD_CARD, NotApplicable
+from inline_table import Format, ColumnType, WILD_CARD, NOT_APPLICABLE
 
 
 class TestDocutils(unittest.TestCase):
@@ -874,16 +874,16 @@ class TestJoin(unittest.TestCase):
         t3 = t1 * t2
         self.assertEqual(t3._labels, ('A', 'B', 'C'))
         self.assertEqual(t3._num_rows, 10)
-        self.assertEqual(t3.rows[0], (1, NotApplicable, 3))
-        self.assertEqual(t3.rows[1], (1, NotApplicable, 5))
-        self.assertEqual(t3.rows[2], (2, 1, NotApplicable))
+        self.assertEqual(t3.rows[0], (1, NOT_APPLICABLE, 3))
+        self.assertEqual(t3.rows[1], (1, NOT_APPLICABLE, 5))
+        self.assertEqual(t3.rows[2], (2, 1, NOT_APPLICABLE))
         self.assertEqual(t3.rows[3], (2, 1, 5))
-        self.assertEqual(t3.rows[4], (NotApplicable, 2, 4))
-        self.assertEqual(t3.rows[5], (NotApplicable, 2, 5))
-        self.assertEqual(t3.rows[6], (1,             3, 3))
-        self.assertEqual(t3.rows[7], (2,             3, NotApplicable))
-        self.assertEqual(t3.rows[8], (NotApplicable, 3, 4))
-        self.assertEqual(t3.rows[9], (WILD_CARD,     3, 5))
+        self.assertEqual(t3.rows[4], (NOT_APPLICABLE, 2, 4))
+        self.assertEqual(t3.rows[5], (NOT_APPLICABLE, 2, 5))
+        self.assertEqual(t3.rows[6], (1,              3, 3))
+        self.assertEqual(t3.rows[7], (2,              3, NOT_APPLICABLE))
+        self.assertEqual(t3.rows[8], (NOT_APPLICABLE, 3, 4))
+        self.assertEqual(t3.rows[9], (WILD_CARD,      3, 5))
 
     def test_wildcard_right(self):
         t1 = compile('''

@@ -429,7 +429,7 @@ class Table:
                 continue
 
             # If the row is N/A raise an error.
-            if NotApplicable in row:
+            if NOT_APPLICABLE in row:
                 if raise_error:
                     raise LookupError(
                         "The result for the condition is not applicable: " +
@@ -665,8 +665,8 @@ class ColumnType:
             """Evaluate a string in the table cell."""
             if expression == WILD_CARD.DIRECTIVE:
                 return WILD_CARD
-            if expression == NotApplicable.DIRECTIVE:
-                return NotApplicable
+            if expression == NOT_APPLICABLE.DIRECTIVE:
+                return NOT_APPLICABLE
             return eval(expression, variables)
 
     class Condition(_SetBase):
@@ -704,8 +704,8 @@ class ColumnType:
             """
             if expression == WILD_CARD.DIRECTIVE:
                 return WILD_CARD
-            if expression == NotApplicable.DIRECTIVE:
-                return NotApplicable
+            if expression == NOT_APPLICABLE.DIRECTIVE:
+                return NOT_APPLICABLE
 
             # Use first letter as symbol
             s = label[0]
@@ -748,8 +748,8 @@ class ColumnType:
         def evaluate(self, expression, variables, label):
             if expression == WILD_CARD.DIRECTIVE:
                 return WILD_CARD
-            if expression == NotApplicable.DIRECTIVE:
-                return NotApplicable
+            if expression == NOT_APPLICABLE.DIRECTIVE:
+                return NOT_APPLICABLE
 
             # Evaluate as Python literals and compile as a regular expression.
             return re.compile(eval(expression, variables))
@@ -771,8 +771,8 @@ class ColumnType:
             """Evaluate as a python literal except '*' and 'N/A'."""
             if expression == WILD_CARD.DIRECTIVE:
                 return WILD_CARD
-            if expression == NotApplicable.DIRECTIVE:
-                return NotApplicable
+            if expression == NOT_APPLICABLE.DIRECTIVE:
+                return NOT_APPLICABLE
             col = eval(expression, variables)
             if not col.__contains__:
                 raise ValueError("'%s' is not a collection" % expression)
@@ -804,8 +804,8 @@ class ColumnType:
             except IntersectionNotFound:
                 pass
 
-            if left_value is NotApplicable and right_value is NotApplicable:
-                return NotApplicable
+            if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
+                return NOT_APPLICABLE
 
             if self.left_type.match(left_value, right_value):
                 # left and right are equivalent
@@ -824,8 +824,8 @@ class ColumnType:
             except IntersectionNotFound:
                 pass
 
-            if left_value is NotApplicable and right_value is NotApplicable:
-                return NotApplicable
+            if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
+                return NOT_APPLICABLE
 
             if self.right_type.match(right_value, left_value):
                 return left_value
@@ -843,8 +843,8 @@ class ColumnType:
             except IntersectionNotFound:
                 pass
 
-            if left_value is NotApplicable and right_value is NotApplicable:
-                return NotApplicable
+            if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
+                return NOT_APPLICABLE
 
             if self.left_type.match(left_value, right_value):
                 return right_value
@@ -862,8 +862,8 @@ class ColumnType:
             except IntersectionNotFound:
                 pass
 
-            if left_value is NotApplicable and right_value is NotApplicable:
-                return NotApplicable
+            if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
+                return NOT_APPLICABLE
 
             return lambda x: (self.left_type.match(left_value, x) and
                               self.right_type.match(right_value, x))
@@ -936,7 +936,7 @@ class _NotApplicable:
 
     The object does not equal with any value.
 
-    In the module this object is used from ``NotApplicable`` variable,
+    In the module this object is used from ``NOT_APPLICABLE`` variable,
     do not create a object directly.
     """
 
@@ -967,12 +967,12 @@ class _NotApplicable:
         return self.DIRECTIVE
 
     def __repr__(self):
-        """Return 'NotApplicable'."""
-        return 'NotApplicable'
+        """Return 'NOT_APPLICABLE'."""
+        return 'NOT_APPLICABLE'
 
 
-NotApplicable = _NotApplicable()
-"""The NotApplicable object. This is unique in the module."""
+NOT_APPLICABLE = _NotApplicable()
+"""The NOT_APPLICABLE object. This is unique in the module."""
 
 
 class Format:
