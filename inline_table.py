@@ -608,6 +608,8 @@ class ColumnType:
     class _TypeBase:
         """Abstract class of all type types."""
 
+        DIRECTIVES = ()
+
         def __eq__(self, other):
             return self.DIRECTIVES == other.DIRECTIVES
 
