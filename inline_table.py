@@ -357,7 +357,7 @@ class Table:
             Tuple(key='A', value=1)
 
         """
-        if len(condition) == 0:
+        if not condition:
             raise LookupError("The condition is empty")
 
         return next(self.__select(condition, raise_error=True))
