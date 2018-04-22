@@ -199,11 +199,18 @@ class Table:
     Table objects are created by the ``compile`` function.
     """
 
+    def __init__(self):
+        """Initialize this object."""
+        # These values are to be initialized in _initialize method."
+        self.Tuple = None
+        self.column_types = None
+        self.rows = None
+
     def _initialize(self, labels, column_types=None):
         """Private initializer.
 
-        This method is defined as I do not show __init__ for users. Call
-        ``Table._initialize(labels, column_types)`` instead of
+        This method is defined because I don't want to show __init__ for users.
+        Call ``Table()._initialize(labels, column_types)`` instead of
         ``Table(labels column_types)``.
 
         :param labels: list of label names
