@@ -282,7 +282,7 @@ class Table:
             >>> next(i)
             Tuple(A=3, B=6)
             >>> next(i)
-            Tuple(A=WildCard, B=0)
+            Tuple(A=WILD_CARD, B=0)
             >>> next(i)
             Traceback (most recent call last):
                 ...
@@ -556,7 +556,7 @@ class Table:
                 return getattr(row, label)
             except AttributeError:
                 # If the row does not have the label, return the wild card.
-                return WildCard
+                return WILD_CARD
 
         joined_table = Table()._initialize(union_labels, union_ctypes)
 
@@ -566,13 +566,13 @@ class Table:
                 # l_row  val1      val2
                 # r_row            val3      val4
                 #
-                # --> Fill with WildCard (Universal Set)
-                # l_row  val1      val2      WildCard
-                # r_row  WildCard  val3      val4
+                # --> Fill with WILD_CARD (Universal Set)
+                # l_row  val1      val2      WILD_CARD
+                # r_row  WILD_CARD val3      val4
                 #
                 # --> Take intersection for each cell
-                # joined val1&     val2&     WildCard&
-                #   row   WildCard  val3      val4
+                # joined val1&     val2&     WILD_CARD&
+                #   row   WILD_CARD  val3     val4
                 #
                 # --> If a cell is empty set (IntersectionNotFound) skip the
                 #     row, else add to the joined table.
@@ -663,8 +663,8 @@ class ColumnType:
 
         def evaluate(self, expression, variables, label):
             """Evaluate a string in the table cell."""
-            if expression == WildCard.DIRECTIVE:
-                return WildCard
+            if expression == WILD_CARD.DIRECTIVE:
+                return WILD_CARD
             if expression == NotApplicable.DIRECTIVE:
                 return NotApplicable
             return eval(expression, variables)
@@ -702,8 +702,8 @@ class ColumnType:
                 False
 
             """
-            if expression == WildCard.DIRECTIVE:
-                return WildCard
+            if expression == WILD_CARD.DIRECTIVE:
+                return WILD_CARD
             if expression == NotApplicable.DIRECTIVE:
                 return NotApplicable
 
@@ -746,8 +746,8 @@ class ColumnType:
             return 'regex'
 
         def evaluate(self, expression, variables, label):
-            if expression == WildCard.DIRECTIVE:
-                return WildCard
+            if expression == WILD_CARD.DIRECTIVE:
+                return WILD_CARD
             if expression == NotApplicable.DIRECTIVE:
                 return NotApplicable
 
@@ -769,8 +769,8 @@ class ColumnType:
 
         def evaluate(self, expression, variables, label):
             """Evaluate as a python literal except '*' and 'N/A'."""
-            if expression == WildCard.DIRECTIVE:
-                return WildCard
+            if expression == WILD_CARD.DIRECTIVE:
+                return WILD_CARD
             if expression == NotApplicable.DIRECTIVE:
                 return NotApplicable
             col = eval(expression, variables)
@@ -800,7 +800,7 @@ class ColumnType:
 
         def evaluate(self, left_value, right_value):
             try:
-                return WildCard.get_intercect(left_value, right_value)
+                return WILD_CARD.get_intercect(left_value, right_value)
             except IntersectionNotFound:
                 pass
 
@@ -820,7 +820,7 @@ class ColumnType:
 
         def evaluate(self, left_value, right_value):
             try:
-                return WildCard.get_intercect(left_value, right_value)
+                return WILD_CARD.get_intercect(left_value, right_value)
             except IntersectionNotFound:
                 pass
 
@@ -839,7 +839,7 @@ class ColumnType:
 
         def evaluate(self, left_value, right_value):
             try:
-                return WildCard.get_intercect(left_value, right_value)
+                return WILD_CARD.get_intercect(left_value, right_value)
             except IntersectionNotFound:
                 pass
 
@@ -858,7 +858,7 @@ class ColumnType:
 
         def evaluate(self, left_value, right_value):
             try:
-                return WildCard.get_intercect(left_value, right_value)
+                return WILD_CARD.get_intercect(left_value, right_value)
             except IntersectionNotFound:
                 pass
 
@@ -880,7 +880,7 @@ class _WildCard:
 
     The wild card is represented with '*' in table texts.
 
-    In the module this object is used from ``WildCard`` variable,
+    In the module this object is used from ``WILD_CARD`` variable,
     do not create a object directly.
     """
 
@@ -911,22 +911,22 @@ class _WildCard:
         return self.DIRECTIVE
 
     def __repr__(self):
-        """Return 'WildCard'."""
-        return 'WildCard'
+        """Return 'WILD_CARD'."""
+        return 'WILD_CARD'
 
     @staticmethod
     def get_intercect(a, b):
-        if a is WildCard and b is WildCard:
-            return WildCard
-        if a is WildCard:
+        if a is WILD_CARD and b is WILD_CARD:
+            return WILD_CARD
+        if a is WILD_CARD:
             return b
-        if b is WildCard:
+        if b is WILD_CARD:
             return a
         raise IntersectionNotFound
 
 
-WildCard = _WildCard()
-"""The WildCard object. This is unique in the module."""
+WILD_CARD = _WildCard()
+"""The WILD_CARD object. This is unique in the module."""
 
 
 class _NotApplicable:

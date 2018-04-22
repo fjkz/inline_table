@@ -7,7 +7,7 @@ from docutils.statemachine import StringList
 
 import inline_table
 from inline_table import *
-from inline_table import Format, ColumnType, WildCard, NotApplicable
+from inline_table import Format, ColumnType, WILD_CARD, NotApplicable
 
 
 class TestDocutils(unittest.TestCase):
@@ -604,7 +604,7 @@ class TestSelect(unittest.TestCase):
 
         ret = tb.select(A=2)
         self.assertEqual(ret, (2, 2))
-        self.assertTrue(ret[0] is not WildCard)
+        self.assertTrue(ret[0] is not WILD_CARD)
 
     def test_na(self):
         tb = compile("""
@@ -883,7 +883,7 @@ class TestJoin(unittest.TestCase):
         self.assertEqual(t3.rows[6], (1,             3, 3))
         self.assertEqual(t3.rows[7], (2,             3, NotApplicable))
         self.assertEqual(t3.rows[8], (NotApplicable, 3, 4))
-        self.assertEqual(t3.rows[9], (WildCard,      3, 5))
+        self.assertEqual(t3.rows[9], (WILD_CARD,     3, 5))
 
     def test_wildcard_right(self):
         t1 = compile('''
@@ -1014,7 +1014,7 @@ class TestIterable(unittest.TestCase):
         self.assertEqual(next(it), (1,))
         self.assertEqual(next(it), (2,))
         self.assertEqual(next(it), (4,))
-        self.assertTrue(next(it)[0] is WildCard)
+        self.assertTrue(next(it)[0] is WILD_CARD)
         assertIterationStop(it)
 
     def test_forloop1(self):
@@ -1029,13 +1029,13 @@ class TestIterable(unittest.TestCase):
          *   0
         === ===''')
         for i, (x, y) in enumerate(tb):
-            if x is WildCard:
+            if x is WILD_CARD:
                 self.assertEqual(y, 0)
             else:
                 self.assertTrue(x * 2 == y)
         self.assertEqual(i, 3)
         for i, (x, y) in enumerate(tb):
-            if x is WildCard:
+            if x is WILD_CARD:
                 self.assertEqual(y, 0)
             else:
                 self.assertTrue(x * 2 == y)
@@ -1053,7 +1053,7 @@ class TestIterable(unittest.TestCase):
          *   0
         === ===''')
         for i, (x, y) in enumerate(tb):
-            if x is WildCard:
+            if x is WILD_CARD:
                 self.assertEqual(y, 0)
             else:
                 self.assertTrue(x * 2 == y)
