@@ -660,7 +660,8 @@ class ColumnType:
         def __str__(self):
             return 'value'
 
-        def evaluate(self, expression, variables, label):
+        @staticmethod
+        def evaluate(expression, variables, label):
             """Evaluate a string in the table cell."""
             if expression == WILD_CARD.DIRECTIVE:
                 return WILD_CARD
@@ -679,7 +680,8 @@ class ColumnType:
         def __str__(self):
             return 'condition'
 
-        def evaluate(self, expression, variables, label):
+        @staticmethod
+        def evaluate(expression, variables, label):
             """Return a function that checks if a value matches.
 
             In the expression the variable must be written with the first
@@ -728,7 +730,8 @@ class ColumnType:
         def __str__(self):
             return 'string'
 
-        def evaluate(self, expression, variables, label):
+        @staticmethod
+        def evaluate(expression, variables, label):
             # No wild card and N/A
             return expression
 
@@ -744,7 +747,8 @@ class ColumnType:
         def __str__(self):
             return 'regex'
 
-        def evaluate(self, expression, variables, label):
+        @staticmethod
+        def evaluate(expression, variables, label):
             if expression == WILD_CARD.DIRECTIVE:
                 return WILD_CARD
             if expression == NOT_APPLICABLE.DIRECTIVE:
@@ -766,7 +770,8 @@ class ColumnType:
         def __str__(self):
             return 'collection'
 
-        def evaluate(self, expression, variables, label):
+        @staticmethod
+        def evaluate(expression, variables, label):
             """Evaluate as a python literal except '*' and 'N/A'."""
             if expression == WILD_CARD.DIRECTIVE:
                 return WILD_CARD
@@ -788,7 +793,8 @@ class ColumnType:
 
     class _Virtual(Value):
 
-        def evaluate(self, expression, variables, label):
+        @staticmethod
+        def evaluate(expression, variables, label):
             assert False, 'Cannot call _Virtual.evaluate'
 
     class _ValueJoinValue(Value):
