@@ -1020,8 +1020,8 @@ class Format:
                 return True
             return False
 
-        @classmethod
-        def parse(cls, lines, parser):
+        @staticmethod
+        def parse(lines, parser):
             """Parse a text table."""
             # See the document of the docutils module and my experiments in
             # test_inline_table.py for the data structure of the below result.
@@ -1070,7 +1070,8 @@ class Format:
             """Judge if the table is estimated to be this format."""
             return Format._ReSTTable.can_accept(lines, r'^ *[= ]*= *$')
 
-        def parse(self, lines):
+        @staticmethod
+        def parse(lines):
             r"""Parse reStructuredText SimpleTable.
 
             :param lines: lines of a table text
@@ -1111,7 +1112,8 @@ class Format:
             """Judge if the table is estimated to be this format."""
             return Format._ReSTTable.can_accept(lines, r'^ *\+[-\+]*-\+ *$')
 
-        def parse(self, lines):
+        @staticmethod
+        def parse(lines):
             r"""Parse reStructuredText Grid Table.
 
             :Example:
@@ -1155,7 +1157,8 @@ class Format:
             cells = [cell.strip() for cell in cells]
             return cells
 
-        def parse(self, lines):
+        @staticmethod
+        def parse(lines):
             r"""Parse a Markdown table.
 
             :Example:
@@ -1169,8 +1172,9 @@ class Format:
                 (['A', 'B', 'C'], [['a', 'b', 'c'], ['1', '2', '3']])
 
             """
-            header = self.__split_cell(lines[0])
-            body = [self.__split_cell(line) for line in lines[2:]]
+            split_cell = Format._MarkdownTable.__split_cell
+            header = split_cell(lines[0])
+            body = [split_cell(line) for line in lines[2:]]
             return header, body
 
     REST_SIMPLE_TABLE = _ReSTSimpleTable()
