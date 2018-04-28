@@ -1006,8 +1006,8 @@ class Format:
         is written. Both of them use the docutils package.
         """
 
-        @classmethod
-        def can_accept(cls, lines, line_pattern):
+        @staticmethod
+        def can_accept(lines, line_pattern):
             """Check if the first/last line match the pattern."""
             if len(lines) < 3:
                 return False
@@ -1065,7 +1065,8 @@ class Format:
     class _ReSTSimpleTable:
         """reStructuredText Simple Table."""
 
-        def can_accept(self, lines):
+        @staticmethod
+        def can_accept(lines):
             """Judge if the table is estimated to be this format."""
             return Format._ReSTTable.can_accept(lines, r'^ *[= ]*= *$')
 
@@ -1105,7 +1106,8 @@ class Format:
     class _ReSTGridTable:
         """reStructuredText Grid Table."""
 
-        def can_accept(self, lines):
+        @staticmethod
+        def can_accept(lines):
             """Judge if the table is estimated to be this format."""
             return Format._ReSTTable.can_accept(lines, r'^ *\+[-\+]*-\+ *$')
 
@@ -1132,7 +1134,8 @@ class Format:
     class _MarkdownTable:
         """Markdown Table."""
 
-        def can_accept(self, lines):
+        @staticmethod
+        def can_accept(lines):
             """Judge if the table is estimated to be this format."""
             if len(lines) < 3:
                 return False
