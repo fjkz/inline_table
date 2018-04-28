@@ -981,8 +981,8 @@ NOT_APPLICABLE = _NotApplicable()
 class Format:
     """Format of text tables."""
 
-    @classmethod
-    def estimate_format(cls, lines):
+    @staticmethod
+    def estimate_format(lines):
         """Estimate the format of the table text.
 
         The lines should be removed leading/trailing white lines and indents.
