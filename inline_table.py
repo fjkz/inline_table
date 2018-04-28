@@ -1010,7 +1010,7 @@ class Format:
 
         raise TableMarkupError('The table format is unknown.')
 
-    class _ReSTTable:
+    class ReSTTable:
         """Sckeleton implementation of reStructuredText tables.
 
         In this class common logic between _ReSTSimpleTable and _ReSTGridTable
@@ -1079,7 +1079,7 @@ class Format:
         @staticmethod
         def can_accept(lines):
             """Judge if the table is estimated to be this format."""
-            return Format._ReSTTable.can_accept(lines, r'^ *[= ]*= *$')
+            return Format.ReSTTable.can_accept(lines, r'^ *[= ]*= *$')
 
         @staticmethod
         def parse(lines):
@@ -1113,7 +1113,7 @@ class Format:
                 (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
 
             """
-            return Format._ReSTTable.parse(lines, DocutilsSimpleTableParser())
+            return Format.ReSTTable.parse(lines, DocutilsSimpleTableParser())
 
     class _ReSTGridTable:
         """reStructuredText Grid Table."""
@@ -1121,7 +1121,7 @@ class Format:
         @staticmethod
         def can_accept(lines):
             """Judge if the table is estimated to be this format."""
-            return Format._ReSTTable.can_accept(lines, r'^ *\+[-\+]*-\+ *$')
+            return Format.ReSTTable.can_accept(lines, r'^ *\+[-\+]*-\+ *$')
 
         @staticmethod
         def parse(lines):
@@ -1142,7 +1142,7 @@ class Format:
                 (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
 
             """
-            return Format._ReSTTable.parse(lines, DocutilsGridTableParser())
+            return Format.ReSTTable.parse(lines, DocutilsGridTableParser())
 
     class _MarkdownTable:
         """Markdown Table."""
