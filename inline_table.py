@@ -631,7 +631,8 @@ class ColumnType:
                 return ColumnType._ValueJoinSet(self, other)
             return ColumnType._ValueJoinValue(self, other)
 
-        def match(self, a, b):
+        @staticmethod
+        def match(a, b):
             return a == b
 
     class _SetBase(_TypeBase):
@@ -646,7 +647,8 @@ class ColumnType:
                 return ColumnType._SetJoinSet(self, other)
             return ColumnType._SetJoinValue(self, other)
 
-        def match(self, a, b):
+        @staticmethod
+        def match(a, b):
             assert False, 'Not Implemented'
 
     class Value(_ValueBase):
@@ -713,7 +715,8 @@ class ColumnType:
             statement = 'lambda %s: %s' % (s, expression)
             return eval(statement, variables)
 
-        def match(self, a, b):
+        @staticmethod
+        def match(a, b):
             return a(b)
 
     class String(_ValueBase):
@@ -757,7 +760,8 @@ class ColumnType:
             # Evaluate as Python literals and compile as a regular expression.
             return re.compile(eval(expression, variables))
 
-        def match(self, a, b):
+        @staticmethod
+        def match(a, b):
             if a.match(b):
                 return True
             return False
@@ -782,7 +786,8 @@ class ColumnType:
                 raise ValueError("'%s' is not a collection" % expression)
             return col
 
-        def match(self, a, b):
+        @staticmethod
+        def match(a, b):
             if b in a:
                 return True
             return False
