@@ -531,7 +531,7 @@ class Table:
                 try:
                     ctype = getattr(table.column_types, label)
                 except AttributeError:
-                    ctype = ColumnType._Virtual()
+                    ctype = ColumnType.Virtual()
                 ctypes.append(ctype)
             return ctypes
 
@@ -628,8 +628,8 @@ class ColumnType:
 
         def join(self, other):
             if other.is_set:
-                return ColumnType._ValueJoinSet(self, other)
-            return ColumnType._ValueJoinValue(self, other)
+                return ColumnType.ValueJoinSet(self, other)
+            return ColumnType.ValueJoinValue(self, other)
 
         @staticmethod
         def match(a, b):
@@ -644,8 +644,8 @@ class ColumnType:
 
         def join(self, other):
             if other.is_set:
-                return ColumnType._SetJoinSet(self, other)
-            return ColumnType._SetJoinValue(self, other)
+                return ColumnType.SetJoinSet(self, other)
+            return ColumnType.SetJoinValue(self, other)
 
         @staticmethod
         def match(a, b):
@@ -796,13 +796,13 @@ class ColumnType:
     # Following classes are used in Table.join
     #
 
-    class _Virtual(Value):
+    class Virtual(Value):
 
         @staticmethod
         def evaluate(expression, variables, label):
-            assert False, 'Cannot call _Virtual.evaluate'
+            assert False, 'Cannot call Virtual.evaluate'
 
-    class _ValueJoinValue(Value):
+    class ValueJoinValue(Value):
 
         def __init__(self, left_type, right_type):
             self.left_type = left_type
@@ -824,7 +824,7 @@ class ColumnType:
 
             raise IntersectionNotFound
 
-    class _ValueJoinSet(Value):
+    class ValueJoinSet(Value):
         def __init__(self, left_type, right_type):
             self.left_type = left_type
             self.right_type = right_type
@@ -844,7 +844,7 @@ class ColumnType:
 
             raise IntersectionNotFound
 
-    class _SetJoinValue(Value):
+    class SetJoinValue(Value):
         def __init__(self, left_type, right_type):
             self.left_type = left_type
             self.right_type = right_type
@@ -864,7 +864,7 @@ class ColumnType:
 
             raise IntersectionNotFound
 
-    class _SetJoinSet(Condition):
+    class SetJoinSet(Condition):
         def __init__(self, left_type, right_type):
             self.left_type = left_type
             self.right_type = right_type
