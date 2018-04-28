@@ -580,7 +580,7 @@ class Table:
                     l_value = getvalue(l_row, label)
                     r_value = getvalue(r_row, label)
                     try:
-                        value = union_ctypes[i].evaluate(l_value, r_value)
+                        value = union_ctypes[i].join_values(l_value, r_value)
                     except IntersectionNotFound:
                         break
                     joined_row.append(value)
@@ -797,7 +797,8 @@ class ColumnType:
             self.left_type = left_type
             self.right_type = right_type
 
-        def evaluate(self, left_value, right_value):
+        def join_values(self, left_value, right_value):
+            """Return intersection of two values."""
             try:
                 return WILD_CARD.get_intercect(left_value, right_value)
             except IntersectionNotFound:
@@ -817,7 +818,8 @@ class ColumnType:
             self.left_type = left_type
             self.right_type = right_type
 
-        def evaluate(self, left_value, right_value):
+        def join_values(self, left_value, right_value):
+            """Return intersection of two values."""
             try:
                 return WILD_CARD.get_intercect(left_value, right_value)
             except IntersectionNotFound:
@@ -836,7 +838,8 @@ class ColumnType:
             self.left_type = left_type
             self.right_type = right_type
 
-        def evaluate(self, left_value, right_value):
+        def join_values(self, left_value, right_value):
+            """Return intersection of two values."""
             try:
                 return WILD_CARD.get_intercect(left_value, right_value)
             except IntersectionNotFound:
@@ -855,7 +858,8 @@ class ColumnType:
             self.left_type = left_type
             self.right_type = right_type
 
-        def evaluate(self, left_value, right_value):
+        def join_values(self, left_value, right_value):
+            """Return intersection of two values."""
             try:
                 return WILD_CARD.get_intercect(left_value, right_value)
             except IntersectionNotFound:
