@@ -1168,8 +1168,8 @@ class Format:
             cells = [cell.strip() for cell in cells]
             return cells
 
-        @staticmethod
-        def parse(lines):
+        @classmethod
+        def parse(cls, lines):
             r"""Parse a Markdown table.
 
             :Example:
@@ -1183,7 +1183,7 @@ class Format:
                 (['A', 'B', 'C'], [['a', 'b', 'c'], ['1', '2', '3']])
 
             """
-            split_cell = Format._MarkdownTable.__split_cell
+            split_cell = cls.__split_cell
             header = split_cell(lines[0])
             body = [split_cell(line) for line in lines[2:]]
             return header, body
