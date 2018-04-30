@@ -408,7 +408,7 @@ class Table:
                 [key + '=' + repr(value) for key, value in condition.items()])
 
         def get_value(named_tuple, label):
-            """Wrapper of getattr build-in function."""
+            """Get the value on the label from the named tuple."""
             try:
                 return getattr(named_tuple, label)
             except AttributeError:
