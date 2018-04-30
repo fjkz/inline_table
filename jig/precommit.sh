@@ -9,9 +9,8 @@ python2 setup.py test
 python3 --version >&2
 python3 setup.py test
 
-pep8 *.py
-
-pep257 *.py
+pycodestyle *.py
+pydocstyle *.py
 
 rst2html5.py README.rst README.html
 
