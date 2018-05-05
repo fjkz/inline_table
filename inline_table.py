@@ -392,13 +392,8 @@ class Table:
             [Tuple(key='A', value=1), Tuple(key='A', value=3)]
 
         """
-        rows = []
-        generator = self.__select(condition, raise_error=False)
-        while True:
-            try:
-                rows.append(next(generator))
-            except StopIteration:
-                return rows
+        row_generator = self.__select(condition, raise_error=False)
+        return [row for row in row_generator]
 
     def __select(self, condition, raise_error):
         """Return a generator to select."""
