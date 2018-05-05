@@ -169,17 +169,15 @@ def strip_lines(lines):
     """Remove leading/trailing white lines and indents."""
     # Remove leading white lines.
     while True:
-        if re.match(r'^\s*$', lines[0]):
-            del lines[0]
-        else:
+        if not re.match(r'^\s*$', lines[0]):
             break
+        del lines[0]
 
     # Remove trailing white lines.
     while True:
-        if re.match(r'^\s*$', lines[-1]):
-            del lines[-1]
-        else:
+        if not re.match(r'^\s*$', lines[-1]):
             break
+        del lines[-1]
 
     # Remove indent.
     # Count whitespaces of 1st and 2nd row, and regard the smaller one is
