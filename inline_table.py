@@ -167,15 +167,23 @@ def compile(text, **variables):
 
 def strip_lines(lines):
     """Remove leading/trailing white lines and indents."""
+    lines = copy.copy(lines)
+
+    def empty_line(line):
+        white_line_pattern = r'^\s*$'
+        return re.match(white_line_pattern, line) is not None
+
     # Remove leading white lines.
     while True:
-        if not re.match(r'^\s*$', lines[0]):
+        if not lines:
+            raise TableMarkupError('All lines are empty.')
+        if not empty_line(lines[0]):
             break
         del lines[0]
 
     # Remove trailing white lines.
     while True:
-        if not re.match(r'^\s*$', lines[-1]):
+        if not empty_line(lines[-1]):
             break
         del lines[-1]
 

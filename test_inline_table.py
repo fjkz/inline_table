@@ -468,6 +468,16 @@ class TestCompile(unittest.TestCase):
                 | a       |
                 '''))
 
+    def test_compile_empty(self):
+        self.assertRaises(
+            TableMarkupError,
+            lambda: compile(''))
+
+    def test_compile_whitelines(self):
+        self.assertRaises(
+            TableMarkupError,
+            lambda: compile('\n  \n\n\t\n\n\n'))
+
 
 class TestColumnType(unittest.TestCase):
 
