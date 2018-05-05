@@ -416,7 +416,7 @@ class Table:
                     return False
             return True
 
-        def raise_error_if_possible(message):
+        def raise_error_if_allowed(message):
             """Raise LookupError if raise_error is True."""
             if raise_error:
                 raise LookupError(message)
@@ -427,7 +427,7 @@ class Table:
 
             # If the row is N/A raise an error.
             if NOT_APPLICABLE in row:
-                raise_error_if_possible(
+                raise_error_if_allowed(
                     "The result for the condition is not applicable: " +
                     format_condition(condition))
                 continue
@@ -440,7 +440,7 @@ class Table:
             yield row
 
         # If no row is matched
-        raise_error_if_possible(
+        raise_error_if_allowed(
             "No row is found for the condition: " +
             format_condition(condition))
         # stop iteration
