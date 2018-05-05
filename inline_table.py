@@ -191,8 +191,11 @@ def strip_lines(lines):
     # Count whitespaces of 1st and 2nd row, and regard the smaller one is
     # the indent width. The reason to see the 2nd row is for the case of
     # Markdown table without side '|'s.
-    indent0 = re.search(r'\S', lines[0]).start()  # 1st row
-    indent1 = re.search(r'\S', lines[1]).start()  # 2nd row
+    def first_char(line):
+        return re.search(r'\S', line).start()
+
+    indent0 = first_char(lines[0])  # 1st row
+    indent1 = first_char(lines[1])  # 2nd row
     indent = min(indent0, indent1)
     lines = [line[indent:] for line in lines]
 
