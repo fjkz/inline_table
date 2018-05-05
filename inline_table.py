@@ -416,18 +416,21 @@ class Table:
                     return False
             return True
 
+        def raise_error_if_possible(message):
+            """Raise LookupError if raise_error is True."""
+            if raise_error:
+                raise LookupError(message)
+
         for row in self.rows:
             if not match(row):
                 continue
 
             # If the row is N/A raise an error.
             if NOT_APPLICABLE in row:
-                if raise_error:
-                    raise LookupError(
-                        "The result for the condition is not applicable: " +
-                        format_condition(condition))
-                else:
-                    continue
+                raise_error_if_possible(
+                    "The result for the condition is not applicable: " +
+                    format_condition(condition))
+                continue
 
             # Overwrite with the values in the condition
             # for excepting the wild card.
@@ -437,10 +440,9 @@ class Table:
             yield row
 
         # If no row is matched
-        if raise_error:
-            raise LookupError(
-                "No row is found for the condition: " +
-                format_condition(condition))
+        raise_error_if_possible(
+            "No row is found for the condition: " +
+            format_condition(condition))
         # stop iteration
 
     def union(self, other):
