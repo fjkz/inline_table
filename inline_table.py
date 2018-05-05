@@ -706,8 +706,8 @@ class ColumnType:
                 return NOT_APPLICABLE
 
             # Use first letter as symbol
-            s = label[0]
-            statement = 'lambda %s: %s' % (s, expression)
+            symbol = label[0]
+            statement = 'lambda %s: %s' % (symbol, expression)
             return eval(statement, variables)
 
         @staticmethod
