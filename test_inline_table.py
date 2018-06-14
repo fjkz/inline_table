@@ -244,12 +244,12 @@ class TestFormatEstimation(unittest.TestCase):
             Format.MARKDOWN_TABLE)
 
     def test_invalid_format1(self):
-        self.assertRaises(TableMarkupError,
-                          lambda: Format.estimate_format(['aaa']))
+        with self.assertRaises(TableMarkupError):
+            Format.estimate_format(['aaa'])
 
     def test_invalid_format2(self):
-        self.assertRaises(TableMarkupError,
-                          lambda: Format.estimate_format(['===']))
+        with self.assertRaises(TableMarkupError):
+            Format.estimate_format(['==='])
 
 
 class TestSimpleTableParser(unittest.TestCase):
@@ -413,26 +413,24 @@ class TestCompile(unittest.TestCase):
         self.assertEqual(tb.select(A='1'), ('1',))
 
     def test_variable_leak1(self):
-        self.assertRaises(
-            NameError,
-            lambda: compile("""
+        with self.assertRaises(NameError):
+            compile("""
                 ===
                  A
                 ===
                 re
                 ===
-                """))
+                """)
 
     def test_variable_leak2(self):
-        self.assertRaises(
-            NameError,
-            lambda: compile("""
+        with self.assertRaises(NameError):
+            compile("""
                 =====
                  A
                 =====
                 table
                 =====
-                """))
+                """)
 
     def test_grid_table(self):
         tb = compile('''
@@ -460,23 +458,20 @@ class TestCompile(unittest.TestCase):
         self.assertEqual(t.select(A=1), (1, 2, 3, 4))
 
     def test_invalid_directive(self):
-        self.assertRaises(
-            TableMarkupError,
-            lambda: compile('''
+        with self.assertRaises(TableMarkupError):
+            compile('''
                 | A (foo) |
                 |---------|
                 | a       |
-                '''))
+                ''')
 
     def test_compile_empty(self):
-        self.assertRaises(
-            TableMarkupError,
-            lambda: compile(''))
+        with self.assertRaises(TableMarkupError):
+            compile('')
 
     def test_compile_whitelines(self):
-        self.assertRaises(
-            TableMarkupError,
-            lambda: compile('\n  \n\n\t\n\n\n'))
+        with self.assertRaises(TableMarkupError):
+            compile('\n  \n\n\t\n\n\n')
 
 
 class TestColumnType(unittest.TestCase):
@@ -547,7 +542,8 @@ class TestColumnType(unittest.TestCase):
             N/A         True
             0 <= a      False
             =========== =====''')
-        self.assertRaises(LookupError, lambda: tb.select(a=-1))
+        with self.assertRaises(LookupError):
+            tb.select(a=-1)
         self.assertEqual(tb.select(a=1), (1, False))
 
     def test_cond(self):
@@ -561,7 +557,8 @@ class TestColumnType(unittest.TestCase):
             ====== ===''')
         self.assertEqual(tb.select(A=1), (1, 1))
         self.assertEqual(tb.select(A=2), (2, 2))
-        self.assertRaises(LookupError, lambda: tb.select(A=-1))
+        with self.assertRaises(LookupError):
+            tb.select(A=-1)
 
     def test_string(self):
         tb = compile('''
@@ -624,7 +621,8 @@ class TestSelect(unittest.TestCase):
          1  N/A
         === ===
         """)
-        self.assertRaises(LookupError, lambda: tb.select(A=1))
+        with self.assertRaises(LookupError):
+            tb.select(A=1)
 
     def test_na_for_key(self):
         tb = compile("""
@@ -645,7 +643,8 @@ class TestSelect(unittest.TestCase):
          1   1
         === ===
         """)
-        self.assertRaises(LookupError, lambda: tb.select())
+        with self.assertRaises(LookupError):
+            tb.select()
 
     def test_invalid_label(self):
         tb = compile("""
@@ -655,11 +654,8 @@ class TestSelect(unittest.TestCase):
          1   1
         === ===
         """)
-        try:
+        with self.assertRaises(LookupError, msg="Label 'C' is invalid"):
             tb.select(C=1)
-            self.fail()
-        except LookupError as ok:
-            self.assertEqual(str(ok), "Label 'C' is invalid")
 
 
 class TestSelectAll(unittest.TestCase):
@@ -711,7 +707,8 @@ class TestTable(unittest.TestCase):
 
     def test_one_key_no_value(self):
         tb = Table()._initialize(['key'])
-        self.assertRaises(LookupError, lambda: tb.select(key='value'))
+        with self.assertRaises(LookupError):
+            tb.select(key='value')
 
     def test_one_key_one_value(self):
         tb = Table()._initialize(['key'])
