@@ -1199,7 +1199,7 @@ class Format:
     MARKDOWN_TABLE = _MarkdownTable()
 
 
-class TableMarkupError(Exception):
+class TableMarkupError(ValueError):
     """Exception about a table text format."""
 
     pass
