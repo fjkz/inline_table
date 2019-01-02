@@ -1,23 +1,19 @@
-===================================================================================
-                inline_table - Embedded text tables in Python code
-===================================================================================
+===============================================================================
+              inline_table - Embedded text tables in Python code
+===============================================================================
 
 ``inline_table`` is a Python module for embedding text tables into source-code.
 
-The table is a good notation. It is simple and easy to read. We can see whether all
-cases are taken into account or not. We create many tables as software design works:
-decision tables, state transition tables, etc.
+Table is a useful notation. It is simple and easy to read. We create many
+tables as design works: decision tables, state transition tables, etc.
 
-We cannot, however, write tables directly with programming languages. We manually
-convert tables into source-code with if-statements. Manual operation often causes
-mistakes. And today, the readability of source-code is important. When we read
-source-code, we must reconstruct the design tables from the source-code. This work
-is not effective.
+We cannot, however, write tables directly with programming languages. We
+manually convert tables into code with if-statements. Manual operation often
+causes mistakes. If-statements loss the readability. We need to reconstruct
+tables when we read the source-code.
 
-We need a way to write tables in source-code. We should be able to write code as a
-document. The ``inline_table`` module allows us to do this.
-
-Let's write a simple logic more simply.
+We should be able to write code as a document. The ``inline_table`` module
+allows us to do this.
 
 Example
 =======
