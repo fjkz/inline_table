@@ -170,6 +170,7 @@ def strip_lines(lines):
     lines = copy.copy(lines)
 
     def empty_line(line):
+        """Return True if the line is white."""
         white_line_pattern = r'^\s*$'
         return re.match(white_line_pattern, line) is not None
 
@@ -192,6 +193,7 @@ def strip_lines(lines):
     # the indent width. The reason to see the 2nd row is for the case of
     # Markdown table without side '|'s.
     def first_char(line):
+        """Return the position of first non-space character."""
         return re.search(r'\S', line).start()
 
     indent0 = first_char(lines[0])  # 1st row
@@ -480,6 +482,7 @@ class Table:
 
         if self.column_types != other.column_types:
             def format_column_types(column_types):
+                """Format column type string."""
                 return '(%s)' % ', '.join([str(t) for t in column_types])
 
             raise TypeError(
