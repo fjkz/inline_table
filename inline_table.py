@@ -138,7 +138,7 @@ def compile(text, **variables):
     lines = strip_lines(lines)
     fmt = estimate_format(lines)
     labels, rows = fmt.parse(lines)
-    column_types = ['' for _ in enumerate(labels)]
+    coltype_strs = [''] * len(labels)
 
     # Move '(...)' word from labels to column_types.
     # e.g.,
@@ -148,10 +148,10 @@ def compile(text, **variables):
     for i, s in enumerate(labels):
         match = pattern.match(s)
         if match:
-            labels[i], column_types[i] = match.group(1, 2)
+            labels[i], coltype_strs[i] = match.group(1, 2)
 
     # Convert strings to ColumnType values
-    column_types = [ColumnType.get_column_type(a) for a in column_types]
+    column_types = [ColumnType.get_column_type(a) for a in coltype_strs]
     table = Table()._initialize(labels, column_types)
     for row in rows:
         # Evaluate the literal in each cell with given variables.
