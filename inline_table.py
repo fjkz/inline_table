@@ -330,20 +330,23 @@ class Table:
         """
         if isinstance(values, dict):
             condition = values
+            try:
+                self.select(**condition)
+                return True
+            except LookupError:
+                return False
+
         elif isinstance(values, (list, tuple)):
             if len(values) != self._num_columns:
                 return False
             condition = {}
             for i, label in enumerate(self._labels):
                 condition[label] = values[i]
+            return self.contains(condition)
+
         else:
             return False
 
-        try:
-            self.select(**condition)
-            return True
-        except LookupError:
-            return False
 
     def __contains__(self, values):
         """Check if this table contains given values.
