@@ -897,8 +897,6 @@ class ColumnType:
 class IntersectionNotFound(Exception):
     """Used for internal controls."""
 
-    pass
-
 
 class _WildCard:
     """An object that equals with any value.
@@ -1205,5 +1203,3 @@ MARKDOWN_TABLE = MarkdownTable()
 
 class TableMarkupError(ValueError):
     """Exception about a table text format."""
-
-    pass
