@@ -6,8 +6,10 @@ from docutils.parsers.rst.tableparser import SimpleTableParser
 from docutils.statemachine import StringList
 
 import inline_table
-from inline_table import (Format, ColumnType, WILD_CARD, NOT_APPLICABLE,
-                          Table, TableMarkupError, compile)
+from inline_table import (
+    ColumnType, WILD_CARD, NOT_APPLICABLE, Table, TableMarkupError,
+    compile, REST_SIMPLE_TABLE, REST_GRID_TABLE, MARKDOWN_TABLE,
+    estimate_format)
 
 
 class TestDocutils(unittest.TestCase):
@@ -181,81 +183,81 @@ class TestDocutils(unittest.TestCase):
 class TestFormatEstimation(unittest.TestCase):
 
     def assertEstimatedTo(self, lines, expected):
-        fmt = Format.estimate_format(lines)
+        fmt = estimate_format(lines)
         self.assertTrue(fmt is expected)
 
     def test_simple_table1(self):
         self.assertEstimatedTo(
             ['=== ===\n'] * 3,
-            Format.REST_SIMPLE_TABLE)
+            REST_SIMPLE_TABLE)
 
     def test_simple_table2(self):
         self.assertEstimatedTo(
             ['==\n'] * 3,
-            Format.REST_SIMPLE_TABLE)
+            REST_SIMPLE_TABLE)
 
     def test_grid_table1(self):
         self.assertEstimatedTo(
             ['+---+---+\n',
              '+===+===+\n',
              '+---+---+\n'],
-            Format.REST_GRID_TABLE)
+            REST_GRID_TABLE)
 
     def test_grid_table2(self):
         self.assertEstimatedTo(
             ['+--+\n',
              '+==+\n',
              '+--+'],
-            Format.REST_GRID_TABLE)
+            REST_GRID_TABLE)
 
     def test_markdown1(self):
         self.assertEstimatedTo(
             ['| a | b |\n',
              '|---|---|\n',
              '| c | d |\n'],
-            Format.MARKDOWN_TABLE)
+            MARKDOWN_TABLE)
 
     def test_markdown2(self):
         self.assertEstimatedTo(
             ['| a | b |\n',
              '| - | - |\n',
              '| c | d |\n'],
-            Format.MARKDOWN_TABLE)
+            MARKDOWN_TABLE)
 
     def test_markdown3(self):
         self.assertEstimatedTo(
             ['| a | b |\n',
              '|:- | -:|\n',
              '| c | d |\n'],
-            Format.MARKDOWN_TABLE)
+            MARKDOWN_TABLE)
 
     def test_markdown4(self):
         self.assertEstimatedTo(
             [' a | b \n',
              '---|---\n',
              ' c | d \n'],
-            Format.MARKDOWN_TABLE)
+            MARKDOWN_TABLE)
 
     def test_markdown5(self):
         self.assertEstimatedTo(
             ['a | b | c \n',
              ':--- |:--- |: ---\n',
              'c | d | e \n'],
-            Format.MARKDOWN_TABLE)
+            MARKDOWN_TABLE)
 
     def test_invalid_format1(self):
         self.assertRaises(TableMarkupError,
-                          lambda: Format.estimate_format(['aaa']))
+                          lambda: estimate_format(['aaa']))
 
     def test_invalid_format2(self):
         self.assertRaises(TableMarkupError,
-                          lambda: Format.estimate_format(['===']))
+                          lambda: estimate_format(['===']))
 
 
 class TestSimpleTableParser(unittest.TestCase):
 
     def assertParsedTo(self, text, expected):
-        parser = Format.REST_SIMPLE_TABLE
+        parser = REST_SIMPLE_TABLE
         ret = parser.parse(text.splitlines())
         self.assertEqual(ret, expected)
 
@@ -303,7 +305,7 @@ class TestSimpleTableParser(unittest.TestCase):
 class TestGridTableParser(unittest.TestCase):
 
     def assertParsedTo(self, text, expected):
-        parser = Format.REST_GRID_TABLE
+        parser = REST_GRID_TABLE
         ret = parser.parse(text.splitlines())
         self.assertEqual(ret, expected)
 
@@ -351,7 +353,7 @@ class TestGridTableParser(unittest.TestCase):
 class TestMarkdownParser(unittest.TestCase):
 
     def assertParsedTo(self, text, expected):
-        parser = Format.MARKDOWN_TABLE
+        parser = MARKDOWN_TABLE
         ret = parser.parse(text.splitlines())
         self.assertEqual(ret, expected)
 

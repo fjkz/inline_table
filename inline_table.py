@@ -136,7 +136,7 @@ def compile(text, **variables):
     """
     lines = text.splitlines()
     lines = strip_lines(lines)
-    fmt = Format.estimate_format(lines)
+    fmt = estimate_format(lines)
     labels, rows = fmt.parse(lines)
     column_types = ['' for _ in enumerate(labels)]
 
@@ -346,7 +346,6 @@ class Table:
 
         else:
             return False
-
 
     def __contains__(self, values):
         """Check if this table contains given values.
@@ -1001,208 +1000,207 @@ NOT_APPLICABLE = _NotApplicable()
 """The NOT_APPLICABLE object. This is unique in the module."""
 
 
-class Format:
-    """Format of text tables."""
+def estimate_format(lines):
+    """Estimate the format of the table text.
+
+    The lines should be removed leading/trailing white lines and indents.
+    Use strip_lines function.
+
+    :pram lines: lines of the table text
+    :return: estimated table format
+    """
+    for fmt in (REST_SIMPLE_TABLE, REST_GRID_TABLE, MARKDOWN_TABLE):
+        if fmt.can_accept(lines):
+            return fmt
+
+    raise TableMarkupError('The table format is unknown.')
+
+
+class ReSTTable:
+    """Sckeleton implementation of reStructuredText tables.
+
+    In this class common logic between ReSTSimpleTable and ReSTGridTable
+    is written. Both of them use the docutils package.
+    """
 
     @staticmethod
-    def estimate_format(lines):
-        """Estimate the format of the table text.
-
-        The lines should be removed leading/trailing white lines and indents.
-        Use strip_lines function.
-
-        :pram lines: lines of the table text
-        :return: estimated table format
-        """
-        for fmt in (Format.REST_SIMPLE_TABLE,
-                    Format.REST_GRID_TABLE,
-                    Format.MARKDOWN_TABLE):
-            if fmt.can_accept(lines):
-                return fmt
-
-        raise TableMarkupError('The table format is unknown.')
-
-    class ReSTTable:
-        """Sckeleton implementation of reStructuredText tables.
-
-        In this class common logic between _ReSTSimpleTable and _ReSTGridTable
-        is written. Both of them use the docutils package.
-        """
-
-        @staticmethod
-        def can_accept(lines, line_pattern):
-            """Check if the first/last line match the pattern."""
-            if len(lines) < 3:
-                return False
-
-            first_line = lines[0]
-            last_line = lines[-1]
-
-            if (re.match(line_pattern, first_line) and
-                    re.match(line_pattern, last_line)):
-                return True
+    def can_accept(lines, line_pattern):
+        """Check if the first/last line match the pattern."""
+        if len(lines) < 3:
             return False
 
-        @staticmethod
-        def parse(lines, parser):
-            """Parse a text table."""
-            # See the document of the docutils module and my experiments in
-            # test_inline_table.py for the data structure of the below result.
-            try:
-                data = parser.parse(StringList(lines))
-            except DocutilsTableMarkupError as e:
-                raise TableMarkupError(e)
+        first_line = lines[0]
+        last_line = lines[-1]
 
+        if (re.match(line_pattern, first_line) and
+                re.match(line_pattern, last_line)):
+            return True
+        return False
+
+    @staticmethod
+    def parse(lines, parser):
+        """Parse a text table."""
+        # See the document of the docutils module and my experiments in
+        # test_inline_table.py for the data structure of the below result.
+        try:
+            data = parser.parse(StringList(lines))
+        except DocutilsTableMarkupError as e:
+            raise TableMarkupError(e)
+
+        # === ===
+        #  a   b   <- these
+        #  c   d
+        # === ===
+        #  e   f
+        # === ===
+        labels = [' '.join(c[3]).strip() for c in data[1][0]]
+
+        if len(data[1]) >= 2:
             # === ===
-            #  a   b   <- these
-            #  c   d
+            #  a   b
+            #  c   d   <- these
             # === ===
             #  e   f
             # === ===
-            labels = [' '.join(c[3]).strip() for c in data[1][0]]
+            for row in data[1][1:]:
+                for i, cell in enumerate(row):
+                    labels[i] += ' ' + ' '.join(cell[3])
+            labels = [s.strip() for s in labels]
 
-            if len(data[1]) >= 2:
-                # === ===
-                #  a   b
-                #  c   d   <- these
-                # === ===
-                #  e   f
-                # === ===
-                for row in data[1][1:]:
-                    for i, cell in enumerate(row):
-                        labels[i] += ' ' + ' '.join(cell[3])
-                labels = [s.strip() for s in labels]
+        # === ===
+        #  a   b
+        # === ===
+        #  c   d   <- these
+        #  e   f   <-
+        # === ===
+        rows = []
+        for r in data[2]:
+            rows.append([' '.join(c[3]).strip() for c in r])
 
-            # === ===
-            #  a   b
-            # === ===
-            #  c   d   <- these
-            #  e   f   <-
-            # === ===
-            rows = []
-            for r in data[2]:
-                rows.append([' '.join(c[3]).strip() for c in r])
+        return labels, rows
 
-            return labels, rows
 
-    class _ReSTSimpleTable:
-        """reStructuredText Simple Table."""
+class ReSTSimpleTable:
+    """reStructuredText Simple Table."""
 
-        @staticmethod
-        def can_accept(lines):
-            """Judge if the table is estimated to be this format."""
-            return Format.ReSTTable.can_accept(lines, r'^ *[= ]*= *$')
+    @staticmethod
+    def can_accept(lines):
+        """Judge if the table is estimated to be this format."""
+        return ReSTTable.can_accept(lines, r'^ *[= ]*= *$')
 
-        @staticmethod
-        def parse(lines):
-            r"""Parse reStructuredText SimpleTable.
+    @staticmethod
+    def parse(lines):
+        r"""Parse reStructuredText SimpleTable.
 
-            :param lines: lines of a table text
-            :type text: string
-            :return: tuple of list of labels and list of row values
+        :param lines: lines of a table text
+        :type text: string
+        :return: tuple of list of labels and list of row values
 
-            :Example:
+        :Example:
 
-                >>> Format.REST_SIMPLE_TABLE.parse('''\
-                ... ==== ====
-                ...  A    B
-                ... ==== ====
-                ...  a1   b1
-                ...  a2   b2
-                ... ==== ====
-                ... '''.splitlines())
-                (['A', 'B'], [['a1', 'b1'], ['a2', 'b2']])
+            >>> REST_SIMPLE_TABLE.parse('''\
+            ... ==== ====
+            ...  A    B
+            ... ==== ====
+            ...  a1   b1
+            ...  a2   b2
+            ... ==== ====
+            ... '''.splitlines())
+            (['A', 'B'], [['a1', 'b1'], ['a2', 'b2']])
 
-                >>> Format.REST_SIMPLE_TABLE.parse('''\
-                ... ==== ====
-                ...  A    B
-                ... (a)  (b)
-                ... ==== ====
-                ...  a1   b1
-                ...  a2   b2
-                ... ==== ====
-                ... '''.splitlines())
-                (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
+            >>> REST_SIMPLE_TABLE.parse('''\
+            ... ==== ====
+            ...  A    B
+            ... (a)  (b)
+            ... ==== ====
+            ...  a1   b1
+            ...  a2   b2
+            ... ==== ====
+            ... '''.splitlines())
+            (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
 
-            """
-            return Format.ReSTTable.parse(lines, DocutilsSimpleTableParser())
+        """
+        return ReSTTable.parse(lines, DocutilsSimpleTableParser())
 
-    class _ReSTGridTable:
-        """reStructuredText Grid Table."""
 
-        @staticmethod
-        def can_accept(lines):
-            """Judge if the table is estimated to be this format."""
-            return Format.ReSTTable.can_accept(lines, r'^ *\+[-\+]*-\+ *$')
+class ReSTGridTable:
+    """reStructuredText Grid Table."""
 
-        @staticmethod
-        def parse(lines):
-            r"""Parse reStructuredText Grid Table.
+    @staticmethod
+    def can_accept(lines):
+        """Judge if the table is estimated to be this format."""
+        return ReSTTable.can_accept(lines, r'^ *\+[-\+]*-\+ *$')
 
-            :Example:
+    @staticmethod
+    def parse(lines):
+        r"""Parse reStructuredText Grid Table.
 
-                >>> Format.REST_GRID_TABLE.parse('''\
-                ... +-----+-----+
-                ... |  A  |  B  |
-                ... | (a) | (b) |
-                ... +=====+=====+
-                ... | a1  | b1  |
-                ... +-----+-----+
-                ... | a2  | b2  |
-                ... +-----+-----+
-                ... '''.splitlines())
-                (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
+        :Example:
 
-            """
-            return Format.ReSTTable.parse(lines, DocutilsGridTableParser())
+            >>> REST_GRID_TABLE.parse('''\
+            ... +-----+-----+
+            ... |  A  |  B  |
+            ... | (a) | (b) |
+            ... +=====+=====+
+            ... | a1  | b1  |
+            ... +-----+-----+
+            ... | a2  | b2  |
+            ... +-----+-----+
+            ... '''.splitlines())
+            (['A (a)', 'B (b)'], [['a1', 'b1'], ['a2', 'b2']])
 
-    class _MarkdownTable:
-        """Markdown Table."""
+        """
+        return ReSTTable.parse(lines, DocutilsGridTableParser())
 
-        @staticmethod
-        def can_accept(lines):
-            """Judge if the table is estimated to be this format."""
-            if len(lines) < 3:
-                return False
-            if re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]):
-                return True
+
+class MarkdownTable:
+    """Markdown Table."""
+
+    @staticmethod
+    def can_accept(lines):
+        """Judge if the table is estimated to be this format."""
+        if len(lines) < 3:
             return False
+        if re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]):
+            return True
+        return False
 
-        @classmethod
-        def __split_cell(cls, line):
-            # Remove leading |
-            line = re.sub(r'^ *\| *', '', line)
-            # Remove trailing |
-            line = re.sub(r' *\| *$', '', line)
-            # Split at |
-            cells = re.split(r' *\| *', line)
-            # Strip
-            cells = [cell.strip() for cell in cells]
-            return cells
+    @classmethod
+    def __split_cell(cls, line):
+        # Remove leading |
+        line = re.sub(r'^ *\| *', '', line)
+        # Remove trailing |
+        line = re.sub(r' *\| *$', '', line)
+        # Split at |
+        cells = re.split(r' *\| *', line)
+        # Strip
+        cells = [cell.strip() for cell in cells]
+        return cells
 
-        @classmethod
-        def parse(cls, lines):
-            r"""Parse a Markdown table.
+    @classmethod
+    def parse(cls, lines):
+        r"""Parse a Markdown table.
 
-            :Example:
+        :Example:
 
-                >>> Format.MARKDOWN_TABLE.parse('''\
-                ... |  A  |  B  |  C  |
-                ... |-----|:--- | ---:|
-                ... |  a  |  b  |  c  |
-                ... |  1  |  2  |  3  |
-                ... '''.splitlines())
-                (['A', 'B', 'C'], [['a', 'b', 'c'], ['1', '2', '3']])
+            >>> MARKDOWN_TABLE.parse('''\
+            ... |  A  |  B  |  C  |
+            ... |-----|:--- | ---:|
+            ... |  a  |  b  |  c  |
+            ... |  1  |  2  |  3  |
+            ... '''.splitlines())
+            (['A', 'B', 'C'], [['a', 'b', 'c'], ['1', '2', '3']])
 
-            """
-            split_cell = cls.__split_cell
-            header = split_cell(lines[0])
-            body = [split_cell(line) for line in lines[2:]]
-            return header, body
+        """
+        split_cell = cls.__split_cell
+        header = split_cell(lines[0])
+        body = [split_cell(line) for line in lines[2:]]
+        return header, body
 
-    REST_SIMPLE_TABLE = _ReSTSimpleTable()
-    REST_GRID_TABLE = _ReSTGridTable()
-    MARKDOWN_TABLE = _MarkdownTable()
+
+REST_SIMPLE_TABLE = ReSTSimpleTable()
+REST_GRID_TABLE = ReSTGridTable()
+MARKDOWN_TABLE = MarkdownTable()
 
 
 class TableMarkupError(ValueError):
