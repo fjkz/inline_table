@@ -7,7 +7,7 @@ from docutils.statemachine import StringList
 
 import inline_table
 from inline_table import (Format, ColumnType, WILD_CARD, NOT_APPLICABLE,
-                          Table, TableMarkupError)
+                          Table, TableMarkupError, compile)
 
 
 class TestDocutils(unittest.TestCase):
