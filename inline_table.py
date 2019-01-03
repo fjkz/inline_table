@@ -145,8 +145,8 @@ def compile(text, **variables):
     # label = 'a', column_type = '(a)'  --> label = 'a', column_type = '(a)'
     # label = 'a(a)', column_type = ''  --> label = 'a', column_type = '(a)'
     pattern = re.compile(r'([a-zA-Z_]+[0-9_]*) *(\([a-zA-Z0-9_]*\))')
-    for i, s in enumerate(labels):
-        match = pattern.match(s)
+    for i, label in enumerate(labels):
+        match = pattern.match(label)
         if match:
             labels[i], coltype_strs[i] = match.group(1, 2)
 
