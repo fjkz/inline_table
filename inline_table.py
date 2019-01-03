@@ -134,8 +134,7 @@ def compile(text, **variables):
         ======= ===
 
     """
-    lines = text.splitlines()
-    lines = strip_lines(lines)
+    lines = strip_lines(text.splitlines())
     fmt = estimate_format(lines)
     labels, rows = fmt.parse(lines)
     coltype_strs = [''] * len(labels)
