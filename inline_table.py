@@ -6,6 +6,7 @@ source-code. We can write source-code just like a design document.
 
 import collections
 import copy
+import itertools
 import re
 
 from docutils.parsers.rst.tableparser \
@@ -611,34 +612,33 @@ class Table:
 
         joined_table = create_table(union_labels, union_ctypes)
 
-        for l_row in self.rows:
-            for r_row in other.rows:
-                #        LABEL1    LABEL2    LABEL3
-                # l_row  val1      val2
-                # r_row            val3      val4
-                #
-                # --> Fill with WILD_CARD (Universal Set)
-                # l_row  val1      val2      WILD_CARD
-                # r_row  WILD_CARD val3      val4
-                #
-                # --> Take intersection for each cell
-                # joined val1&     val2&     WILD_CARD&
-                #   row   WILD_CARD  val3     val4
-                #
-                # --> If a cell is empty set (IntersectionNotFound) skip the
-                #     row, else add to the joined table.
-                joined_row = []
-                for i, label in enumerate(union_labels):
-                    # If the row does not have the label, return the wild card.
-                    l_value = l_row.get(label, default=WILD_CARD)
-                    r_value = r_row.get(label, default=WILD_CARD)
-                    try:
-                        value = union_ctypes[i].join_values(l_value, r_value)
-                    except IntersectionNotFound:
-                        break
-                    joined_row.append(value)
-                else:
-                    joined_table._insert(joined_row)
+        #        LABEL1    LABEL2    LABEL3
+        # l_row  val1      val2
+        # r_row            val3      val4
+        #
+        # --> Fill with WILD_CARD (Universal Set)
+        # l_row  val1      val2      WILD_CARD
+        # r_row  WILD_CARD val3      val4
+        #
+        # --> Take intersection for each cell
+        # joined val1&     val2&     WILD_CARD&
+        #   row   WILD_CARD  val3     val4
+        #
+        # --> If a cell is empty set (IntersectionNotFound) skip the
+        #     row, else add to the joined table.
+        for l_row, r_row in itertools.product(self.rows, other.rows):
+            joined_row = []
+            for i, label in enumerate(union_labels):
+                # If the row does not have the label, return the wild card.
+                l_value = l_row.get(label, default=WILD_CARD)
+                r_value = r_row.get(label, default=WILD_CARD)
+                try:
+                    value = union_ctypes[i].join_values(l_value, r_value)
+                except IntersectionNotFound:
+                    break
+                joined_row.append(value)
+            else:
+                joined_table._insert(joined_row)
 
         return joined_table
 
