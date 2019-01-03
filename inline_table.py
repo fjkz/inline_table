@@ -227,6 +227,17 @@ def create_table(labels, column_types=None):
                     return default
                 raise LookupError("Label '%s' is invalid" % label)
 
+        def replace(self, **kwargs):
+            """Return a new tuple replaced with given args."""
+            # _replace is defined in tuple class.
+            return self._replace(**kwargs)
+
+        @classmethod
+        def labels(cls):
+            """Return label names of each column."""
+            # _fields is defined in namedtuple().
+            return cls._fields
+
     class ColumnTypeSet(Tuple):
         """Special tuple that contains the types of each field."""
 
@@ -269,8 +280,7 @@ class Table:
     @property
     def _labels(self):
         """Return label names of each column."""
-        # _fields is defined in namedtuple().
-        return self.tuple_class._fields
+        return self.tuple_class.labels()
 
     @property
     def _num_columns(self):
@@ -464,8 +474,7 @@ class Table:
             # for excepting the wild card.
             for label, value in condition.items():
                 kv = {label: value}
-                # _replace is defined in tuple class.
-                row = row._replace(**kv)
+                row = row.replace(**kv)
             yield row
 
         # If no row is matched
