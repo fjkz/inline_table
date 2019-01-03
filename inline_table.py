@@ -636,7 +636,8 @@ class ValueTypeBase(ColumnTypeBase):
     def join(self, other):
         if other.is_set:
             return ValueXSetType(self, other)
-        return ValueXValueType(self, other)
+        else:
+            return ValueXValueType(self, other)
 
     @staticmethod
     def match(a, b):
@@ -651,7 +652,8 @@ class SetTypeBase(ColumnTypeBase):
     def join(self, other):
         if other.is_set:
             return SetXSetType(self, other)
-        return SetXValueType(self, other)
+        else:
+            return SetXValueType(self, other)
 
     @staticmethod
     def match(a, b):
