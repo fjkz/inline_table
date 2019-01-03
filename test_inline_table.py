@@ -7,9 +7,9 @@ from docutils.statemachine import StringList
 
 import inline_table
 from inline_table import (
+    compile, create_table, Table, TableMarkupError,
     ValueType, ConditionType, StringType,
     WILD_CARD, NOT_APPLICABLE,
-    compile, Table, TableMarkupError,
     ReSTSimpleTable, ReSTGridTable, MarkdownTable, estimate_format)
 
 
@@ -709,34 +709,34 @@ class TestSelectAll(unittest.TestCase):
 class TestTable(unittest.TestCase):
 
     def test_labels(self):
-        tb = Table()._initialize(['keyA', 'keyB', 'keyC'])
+        tb = create_table(['keyA', 'keyB', 'keyC'])
         self.assertEqual(tb._labels, ('keyA', 'keyB', 'keyC'))
 
     def test_one_key_no_value(self):
-        tb = Table()._initialize(['key'])
+        tb = create_table(['key'])
         self.assertRaises(LookupError, lambda: tb.select(key='value'))
 
     def test_one_key_one_value(self):
-        tb = Table()._initialize(['key'])
+        tb = create_table(['key'])
         tb._insert(['value'])
         self.assertEqual(tb.select(key='value'), ('value',))
 
     def test_one_key_two_value(self):
-        tb = Table()._initialize(['key'])
+        tb = create_table(['key'])
         tb._insert(['value1'])
         tb._insert(['value2'])
         self.assertEqual(tb.select(key='value1'), ('value1',))
         self.assertEqual(tb.select(key='value2'), ('value2',))
 
     def test_two_key_two_value1(self):
-        tb = Table()._initialize(['keyA', 'keyB'])
+        tb = create_table(['keyA', 'keyB'])
         tb._insert(['value1A', 'value1B'])
         tb._insert(['value2A', 'value2B'])
         self.assertEqual(tb.select(keyA='value1A'), ('value1A', 'value1B'))
         self.assertEqual(tb.select(keyA='value2A'), ('value2A', 'value2B'))
 
     def test_two_key_two_value2(self):
-        tb = Table()._initialize(['keyA', 'keyB'])
+        tb = create_table(['keyA', 'keyB'])
         tb._insert(['value1A', 'value1B'])
         tb._insert(['value2A', 'value2B'])
         self.assertEqual(tb.select(keyB='value1B'), ('value1A', 'value1B'))
@@ -782,8 +782,8 @@ class TestUnion(unittest.TestCase):
         self.assertEqual(next(it), (4, 8))
 
     def test_width_diff(self):
-        t1 = Table()._initialize(['a', 'b'])
-        t2 = Table()._initialize(['a', 'b', 'c'])
+        t1 = create_table(['a', 'b'])
+        t2 = create_table(['a', 'b', 'c'])
         try:
             t1 + t2
             self.fail()
@@ -793,8 +793,8 @@ class TestUnion(unittest.TestCase):
                 "Width of the tables are different: 2 != 3")
 
     def test_labels_diff(self):
-        t1 = Table()._initialize(['a', 'b'])
-        t2 = Table()._initialize(['a', 'c'])
+        t1 = create_table(['a', 'b'])
+        t2 = create_table(['a', 'c'])
         try:
             t1 + t2
             self.fail()
@@ -804,10 +804,10 @@ class TestUnion(unittest.TestCase):
                 "Labels of the tables are different: ('a', 'b') != ('a', 'c')")
 
     def test_column_types_diff(self):
-        t1 = Table()._initialize(
+        t1 = create_table(
             ['a', 'b'],
             [ValueType(), ConditionType()])
-        t2 = Table()._initialize(
+        t2 = create_table(
             ['a', 'b'],
             [ValueType(), StringType()])
         try:

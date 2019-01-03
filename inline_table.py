@@ -151,7 +151,7 @@ def compile(text, **variables):
 
     # Convert strings to ColumnType values
     column_types = [get_column_type(a) for a in coltype_strs]
-    table = Table()._initialize(labels, column_types)
+    table = create_table(labels, column_types)
     for row in rows:
         # Evaluate the literal in each cell with given variables.
         row_evaluated = []
@@ -203,6 +203,34 @@ def strip_lines(lines):
     return lines
 
 
+def create_table(labels, column_types=None):
+    """Define a table schema and create a new table object.
+
+    :param labels: list of label names
+    :param column_types: list of column types
+    """
+    table = Table()
+    # Create a type of named tuple.
+    plaintuple_class = collections.namedtuple('PlainTuple', labels)
+
+    # We name the type name as 'Tuple'. Traditionally, the row of
+    # relational database is called tuple and it has attributes.
+    class Tuple(plaintuple_class):
+        """Row dataset."""
+
+    class ColumnTypeSet(plaintuple_class):
+        """Special taple that contains the types of each field."""
+
+    table.tuple_class = Tuple
+    table.types_class = ColumnTypeSet
+
+    if column_types is None:
+        column_types = [ValueType()] * len(labels)
+    table.column_types = ColumnTypeSet(*column_types)
+
+    return table
+
+
 class Table:
     """Data structure having a table data.
 
@@ -211,31 +239,10 @@ class Table:
 
     def __init__(self):
         """Initialize this object."""
-        # These values are to be initialized in _initialize method."
         self.tuple_class = None
+        self.types_class = None
         self.column_types = None
-        self.rows = None
-
-    def _initialize(self, labels, column_types=None):
-        """Private initializer.
-
-        This method is defined because I don't want to show __init__ for users.
-        Call ``Table()._initialize(labels, column_types)`` instead of
-        ``Table(labels column_types)``.
-
-        :param labels: list of label names
-        :param column_types: list of column types
-        """
-        # Create a type of named tuple.
-        # We name the type name as 'Tuple'. Traditionally, the row of
-        # relational database is called tuple and it has attributes.
-        self.tuple_class = collections.namedtuple('Tuple', labels)
-
-        if not column_types:
-            column_types = [ValueType() for _ in labels]
-        self.column_types = self.tuple_class(*column_types)
         self.rows = []
-        return self
 
     def __str__(self):
         """Return Tab separated values."""
@@ -569,7 +576,7 @@ class Table:
                 # If the row does not have the label, return the wild card.
                 return WILD_CARD
 
-        joined_table = Table()._initialize(union_labels, union_ctypes)
+        joined_table = create_table(union_labels, union_ctypes)
 
         for l_row in self.rows:
             for r_row in other.rows:
