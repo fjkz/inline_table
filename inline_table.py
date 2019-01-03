@@ -442,49 +442,60 @@ class Table:
         row_generator = self.__select(condition, raise_error=False)
         return [row for row in row_generator]
 
-    def __select(self, condition, raise_error):
-        """Return a generator to select."""
-        def format_condition(condition):
-            """Format condition value to 'key1=a, key2=b' style."""
-            return ', '.join(
-                [key + '=' + repr(value) for key, value in condition.items()])
+    class _SelectCondition:
+        """Condition for __select method."""
 
-        def match(row):
+        def __init__(self, condition):
+            self.condition = condition
+
+        def __str__(self):
+            """Format this objekct to 'key1=value1, key2=value2' style."""
+            return ', '.join(
+                [key + '=' + repr(value) for key, value in self.items()])
+
+        def items(self):
+            """Return items in the condition."""
+            return self.condition.items()
+
+        def match(self, row, column_types):
             """Return True if all values in the row match the condition."""
-            for label, condition_value in condition.items():
+            for label, condition_value in self.items():
                 row_value = row.get(label)
-                column_type = self.column_types.get(label)
+                column_type = column_types.get(label)
                 if not column_type.match(row_value, condition_value):
                     return False
             return True
 
+    def __select(self, condition, raise_error):
+        """Return a generator to select."""
         def raise_error_if_allowed(message):
             """Raise LookupError if raise_error is True."""
             if raise_error:
                 raise LookupError(message)
 
+        query = self._SelectCondition(condition)
+
         for row in self.rows:
-            if not match(row):
+            if not query.match(row, self.column_types):
                 continue
 
             # If the row is N/A raise an error.
             if NOT_APPLICABLE in row:
                 raise_error_if_allowed(
                     "The result for the condition is not applicable: " +
-                    format_condition(condition))
+                    str(query))
                 continue
 
             # Overwrite with the values in the condition
             # for excepting the wild card.
-            for label, value in condition.items():
+            for label, value in query.items():
                 kv = {label: value}
                 row = row.replace(**kv)
             yield row
 
         # If no row is matched
         raise_error_if_allowed(
-            "No row is found for the condition: " +
-            format_condition(condition))
+            "No row is found for the condition: " + str(query))
         # stop iteration
 
     def union(self, other):
