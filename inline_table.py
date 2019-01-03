@@ -217,19 +217,47 @@ def create_table(labels, column_types=None):
     # does not seem to be overwritten by inheritance in Python2
     plaintuple_class = collections.namedtuple('Tuple', labels)
 
-    # We name the type name as 'Tuple'. Traditionally, the row of
-    # relational database is called tuple and it has attributes.
-    class Tuple(plaintuple_class):
-        """Row dataset."""
+    class ColumnTypeSet(plaintuple_class):
+        """Special tuple that contains the types of each field."""
+
+        def __str__(self):
+            """Return formatted string."""
+            return '(%s)' % ', '.join([str(field) for field in self])
 
         def get(self, label, default=None):
-            """Get the value on the labele."""
+            """Get the value on the label."""
             try:
                 return getattr(self, label)
             except AttributeError:
                 if default is not None:
                     return default
                 raise LookupError("Label '%s' is invalid" % label)
+
+    if column_types is None:
+        column_types = [ValueType()] * len(labels)
+
+    column_type_set = ColumnTypeSet(*column_types)
+    table.column_types = column_type_set
+
+    # We name the type name as 'Tuple'. Traditionally, the row of
+    # relational database is called tuple and it has attributes.
+    class Tuple(plaintuple_class):
+        """Row dataset."""
+
+        types = column_type_set
+
+        def get(self, label, default=None):
+            """Get the value on the label."""
+            try:
+                return getattr(self, label)
+            except AttributeError:
+                if default is not None:
+                    return default
+                raise LookupError("Label '%s' is invalid" % label)
+
+        def get_type(self, label, default=None):
+            """Get the value type on the label."""
+            return self.types.get(label, default)
 
         def replace(self, **kwargs):
             """Return a new tuple replaced with given args."""
@@ -242,20 +270,7 @@ def create_table(labels, column_types=None):
             # _fields is defined in namedtuple().
             return cls._fields
 
-    class ColumnTypeSet(Tuple):
-        """Special tuple that contains the types of each field."""
-
-        def __str__(self):
-            """Return formatted string."""
-            return '(%s)' % ', '.join([str(field) for field in self])
-
     table.tuple_class = Tuple
-    table.types_class = ColumnTypeSet
-
-    if column_types is None:
-        column_types = [ValueType()] * len(labels)
-    table.column_types = ColumnTypeSet(*column_types)
-
     return table
 
 
@@ -295,6 +310,10 @@ class Table:
     def _num_rows(self):
         """Return the number of rows."""
         return len(self.rows)
+
+    def _get_type(self, label, default=None):
+        """Get the value type on the label."""
+        return self.column_types.get(label, default)
 
     def _insert(self, row_values):
         """Add row data.
@@ -457,11 +476,11 @@ class Table:
             """Return items in the condition."""
             return self.condition.items()
 
-        def match(self, row, column_types):
+        def match(self, row):
             """Return True if all values in the row match the condition."""
             for label, condition_value in self.items():
                 row_value = row.get(label)
-                column_type = column_types.get(label)
+                column_type = row.get_type(label)
                 if not column_type.match(row_value, condition_value):
                     return False
             return True
@@ -476,7 +495,7 @@ class Table:
         query = self._SelectCondition(condition)
 
         for row in self.rows:
-            if not query.match(row, self.column_types):
+            if not query.match(row):
                 continue
 
             # If the row is N/A raise an error.
@@ -571,7 +590,7 @@ class Table:
 
         def get_ctypes(table):
             vtype = VirtualType()
-            ctypes = [table.column_types.get(label, default=vtype)
+            ctypes = [table._get_type(label, default=vtype)
                       for label in union_labels]
             return ctypes
 
