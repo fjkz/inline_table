@@ -7,9 +7,10 @@ from docutils.statemachine import StringList
 
 import inline_table
 from inline_table import (
-    ColumnType, WILD_CARD, NOT_APPLICABLE, Table, TableMarkupError,
-    compile, ReSTSimpleTable, ReSTGridTable, MarkdownTable,
-    estimate_format)
+    ValueType, ConditionType, StringType,
+    WILD_CARD, NOT_APPLICABLE,
+    compile, Table, TableMarkupError,
+    ReSTSimpleTable, ReSTGridTable, MarkdownTable, estimate_format)
 
 
 class TestDocutils(unittest.TestCase):
@@ -805,10 +806,10 @@ class TestUnion(unittest.TestCase):
     def test_column_types_diff(self):
         t1 = Table()._initialize(
             ['a', 'b'],
-            [ColumnType.Value(), ColumnType.Condition()])
+            [ValueType(), ConditionType()])
         t2 = Table()._initialize(
             ['a', 'b'],
-            [ColumnType.Value(), ColumnType.String()])
+            [ValueType(), StringType()])
         try:
             t1 + t2
             self.fail()

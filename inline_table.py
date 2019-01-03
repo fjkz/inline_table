@@ -151,7 +151,7 @@ def compile(text, **variables):
             labels[i], coltype_strs[i] = match.group(1, 2)
 
     # Convert strings to ColumnType values
-    column_types = [ColumnType.get_column_type(a) for a in coltype_strs]
+    column_types = [get_column_type(a) for a in coltype_strs]
     table = Table()._initialize(labels, column_types)
     for row in rows:
         # Evaluate the literal in each cell with given variables.
@@ -233,7 +233,7 @@ class Table:
         self.tuple_class = collections.namedtuple('Tuple', labels)
 
         if not column_types:
-            column_types = [ColumnType.Value() for _ in labels]
+            column_types = [ValueType() for _ in labels]
         self.column_types = self.tuple_class(*column_types)
         self.rows = []
         return self
@@ -542,7 +542,7 @@ class Table:
                 try:
                     ctype = getattr(table.column_types, label)
                 except AttributeError:
-                    ctype = ColumnType.Virtual()
+                    ctype = VirtualType()
                 ctypes.append(ctype)
             return ctypes
 
@@ -608,290 +608,298 @@ class Table:
         return self.join(other)
 
 
-class ColumnType:
-    """Type objects for columns."""
-
-    @classmethod
-    def get_column_type(cls, directive):
-        for type_cls in (cls.Value,
-                         cls.Condition,
-                         cls.String,
-                         cls.Regex,
-                         cls.Collection):
-            if directive in type_cls.DIRECTIVES:
-                return type_cls()
+def get_column_type(directive):
+    """Return a column type that matches the given directive."""
+    for type_cls in (
+            ValueType, ConditionType, StringType,
+            RegexType, CollectionType):
+        if directive in type_cls.DIRECTIVES:
+            return type_cls()
+    else:
         raise TableMarkupError("Invalid directive '%s'" % directive)
 
-    class _TypeBase:
-        """Abstract class of all type types."""
 
-        DIRECTIVES = ()
+class ColumnTypeBase:
+    """Abstract class of all type types."""
 
-        def __eq__(self, other):
-            return self.DIRECTIVES == other.DIRECTIVES
+    DIRECTIVES = ()
 
-    class _ValueBase(_TypeBase):
-        """Abstract class of value type types."""
+    def __eq__(self, other):
+        return self.DIRECTIVES == other.DIRECTIVES
 
-        @property
-        def is_set(self):
-            return False
 
-        def join(self, other):
-            if other.is_set:
-                return ColumnType.ValueJoinSet(self, other)
-            return ColumnType.ValueJoinValue(self, other)
+class ValueTypeBase(ColumnTypeBase):
+    """Abstract class of value type types."""
 
-        @staticmethod
-        def match(a, b):
-            return a == b
+    @property
+    def is_set(self):
+        return False
 
-    class _SetBase(_TypeBase):
-        """Abstract class of set type types."""
+    def join(self, other):
+        if other.is_set:
+            return ValueXSetType(self, other)
+        return ValueXValueType(self, other)
 
-        @property
-        def is_set(self):
+    @staticmethod
+    def match(a, b):
+        return a == b
+
+
+class SetTypeBase(ColumnTypeBase):
+    """Abstract class of set type types."""
+
+    @property
+    def is_set(self):
+        return True
+
+    def join(self, other):
+        if other.is_set:
+            return SetXSetType(self, other)
+        return SetXValueType(self, other)
+
+    @staticmethod
+    def match(a, b):
+        assert False, 'Not Implemented'
+
+
+class ValueType(ValueTypeBase):
+    """Raw values.
+
+    This column type is default.
+    """
+
+    DIRECTIVES = ('(value)', '(val)', '')  # Empty string is here.
+
+    def __str__(self):
+        return 'value'
+
+    @staticmethod
+    def evaluate(expression, variables, label):
+        """Evaluate a string in the table cell."""
+        if expression == WILD_CARD.DIRECTIVE:
+            return WILD_CARD
+        if expression == NOT_APPLICABLE.DIRECTIVE:
+            return NOT_APPLICABLE
+        return eval(expression, variables)
+
+
+class ConditionType(SetTypeBase):
+    """Conditions.
+
+    Data in a condition column is converted to functions.
+    """
+
+    DIRECTIVES = ('(condition)', '(cond)')
+
+    def __str__(self):
+        return 'condition'
+
+    @staticmethod
+    def evaluate(expression, variables, label):
+        """Return a function that checks if a value matches.
+
+        In the expression the variable must be written with the first
+        letter of the label. If the label is 'key', the expression is such
+        as 'k > 0'.
+
+        :param expression: condition statement
+        :param variable: name and value pairs
+                         that is passed to the expression
+        :param label: name of column
+        :return: function that takes one argument and returns True/False
+
+        :Example:
+
+            >>> f = ConditionType().evaluate('v > 0', {}, 'value')
+            >>> f(1)
+            True
+            >>> f(-1)
+            False
+
+        """
+        if expression == WILD_CARD.DIRECTIVE:
+            return WILD_CARD
+        if expression == NOT_APPLICABLE.DIRECTIVE:
+            return NOT_APPLICABLE
+
+        # Use first letter as symbol
+        symbol = label[0]
+        statement = 'lambda %s: %s' % (symbol, expression)
+        return eval(statement, variables)
+
+    @staticmethod
+    def match(a, b):
+        return a(b)
+
+
+class StringType(ValueTypeBase):
+    """Strings.
+
+    Data in this type column is not evaluated as Python literals.
+
+    The wild card and the non-applicable value is not used for this
+    column type.
+    """
+
+    DIRECTIVES = ('(string)', '(str)')
+
+    def __str__(self):
+        return 'string'
+
+    @staticmethod
+    def evaluate(expression, variables, label):
+        # No wild card and N/A
+        return expression
+
+
+class RegexType(SetTypeBase):
+    """Regular expression.
+
+    The wild card and the non-applicable value is not used for this
+    column type.
+    """
+
+    DIRECTIVES = ('(regex)', '(re)')
+
+    def __str__(self):
+        return 'regex'
+
+    @staticmethod
+    def evaluate(expression, variables, label):
+        if expression == WILD_CARD.DIRECTIVE:
+            return WILD_CARD
+        if expression == NOT_APPLICABLE.DIRECTIVE:
+            return NOT_APPLICABLE
+
+        # Evaluate as Python literals and compile as a regular expression.
+        return re.compile(eval(expression, variables))
+
+    @staticmethod
+    def match(a, b):
+        if a.match(b):
             return True
+        return False
 
-        def join(self, other):
-            if other.is_set:
-                return ColumnType.SetJoinSet(self, other)
-            return ColumnType.SetJoinValue(self, other)
 
-        @staticmethod
-        def match(a, b):
-            assert False, 'Not Implemented'
+class CollectionType(SetTypeBase):
+    """Collection."""
 
-    class Value(_ValueBase):
-        """Raw values.
+    DIRECTIVES = '(collection), (coll)'
 
-        This column type is default.
-        """
+    def __str__(self):
+        return 'collection'
 
-        DIRECTIVES = ('(value)', '(val)', '')  # Empty string is here.
+    @staticmethod
+    def evaluate(expression, variables, label):
+        """Evaluate as a python literal except '*' and 'N/A'."""
+        if expression == WILD_CARD.DIRECTIVE:
+            return WILD_CARD
+        if expression == NOT_APPLICABLE.DIRECTIVE:
+            return NOT_APPLICABLE
+        col = eval(expression, variables)
+        if not col.__contains__:
+            raise ValueError("'%s' is not a collection" % expression)
+        return col
 
-        def __str__(self):
-            return 'value'
+    @staticmethod
+    def match(a, b):
+        if b in a:
+            return True
+        return False
 
-        @staticmethod
-        def evaluate(expression, variables, label):
-            """Evaluate a string in the table cell."""
-            if expression == WILD_CARD.DIRECTIVE:
-                return WILD_CARD
-            if expression == NOT_APPLICABLE.DIRECTIVE:
-                return NOT_APPLICABLE
-            return eval(expression, variables)
 
-    class Condition(_SetBase):
-        """Conditions.
+#
+# Following classes are used in Table.join
+#
+class VirtualType(ValueType):
 
-        Data in a condition column is converted to functions.
-        """
+    @staticmethod
+    def evaluate(expression, variables, label):
+        assert False, 'Cannot call Virtual.evaluate'
 
-        DIRECTIVES = ('(condition)', '(cond)')
 
-        def __str__(self):
-            return 'condition'
+class ValueXValueType(ValueType):
 
-        @staticmethod
-        def evaluate(expression, variables, label):
-            """Return a function that checks if a value matches.
+    def __init__(self, left_type, right_type):
+        self.left_type = left_type
+        self.right_type = right_type
 
-            In the expression the variable must be written with the first
-            letter of the label. If the label is 'key', the expression is such
-            as 'k > 0'.
+    def join_values(self, left_value, right_value):
+        """Return intersection of two values."""
+        try:
+            return WILD_CARD.get_intercect(left_value, right_value)
+        except IntersectionNotFound:
+            pass
 
-            :param expression: condition statement
-            :param variable: name and value pairs
-                             that is passed to the expression
-            :param label: name of column
-            :return: function that takes one argument and returns True/False
+        if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
+            return NOT_APPLICABLE
 
-            :Example:
+        if self.left_type.match(left_value, right_value):
+            # left and right are equivalent
+            return left_value
 
-                >>> f = ColumnType.Condition().evaluate('v > 0', {}, 'value')
-                >>> f(1)
-                True
-                >>> f(-1)
-                False
+        raise IntersectionNotFound
 
-            """
-            if expression == WILD_CARD.DIRECTIVE:
-                return WILD_CARD
-            if expression == NOT_APPLICABLE.DIRECTIVE:
-                return NOT_APPLICABLE
 
-            # Use first letter as symbol
-            symbol = label[0]
-            statement = 'lambda %s: %s' % (symbol, expression)
-            return eval(statement, variables)
+class ValueXSetType(ValueType):
+    def __init__(self, left_type, right_type):
+        self.left_type = left_type
+        self.right_type = right_type
 
-        @staticmethod
-        def match(a, b):
-            return a(b)
+    def join_values(self, left_value, right_value):
+        """Return intersection of two values."""
+        try:
+            return WILD_CARD.get_intercect(left_value, right_value)
+        except IntersectionNotFound:
+            pass
 
-    class String(_ValueBase):
-        """Strings.
+        if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
+            return NOT_APPLICABLE
 
-        Data in this type column is not evaluated as Python literals.
+        if self.right_type.match(right_value, left_value):
+            return left_value
 
-        The wild card and the non-applicable value is not used for this
-        column type.
-        """
+        raise IntersectionNotFound
 
-        DIRECTIVES = ('(string)', '(str)')
 
-        def __str__(self):
-            return 'string'
+class SetXValueType(ValueType):
+    def __init__(self, left_type, right_type):
+        self.left_type = left_type
+        self.right_type = right_type
 
-        @staticmethod
-        def evaluate(expression, variables, label):
-            # No wild card and N/A
-            return expression
+    def join_values(self, left_value, right_value):
+        """Return intersection of two values."""
+        try:
+            return WILD_CARD.get_intercect(left_value, right_value)
+        except IntersectionNotFound:
+            pass
 
-    class Regex(_SetBase):
-        """Regular expression.
+        if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
+            return NOT_APPLICABLE
 
-        The wild card and the non-applicable value is not used for this
-        column type.
-        """
+        if self.left_type.match(left_value, right_value):
+            return right_value
 
-        DIRECTIVES = ('(regex)', '(re)')
+        raise IntersectionNotFound
 
-        def __str__(self):
-            return 'regex'
 
-        @staticmethod
-        def evaluate(expression, variables, label):
-            if expression == WILD_CARD.DIRECTIVE:
-                return WILD_CARD
-            if expression == NOT_APPLICABLE.DIRECTIVE:
-                return NOT_APPLICABLE
+class SetXSetType(ConditionType):
+    def __init__(self, left_type, right_type):
+        self.left_type = left_type
+        self.right_type = right_type
 
-            # Evaluate as Python literals and compile as a regular expression.
-            return re.compile(eval(expression, variables))
+    def join_values(self, left_value, right_value):
+        """Return intersection of two values."""
+        try:
+            return WILD_CARD.get_intercect(left_value, right_value)
+        except IntersectionNotFound:
+            pass
 
-        @staticmethod
-        def match(a, b):
-            if a.match(b):
-                return True
-            return False
+        if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
+            return NOT_APPLICABLE
 
-    class Collection(_SetBase):
-        """Collection."""
-
-        DIRECTIVES = '(collection), (coll)'
-
-        def __str__(self):
-            return 'collection'
-
-        @staticmethod
-        def evaluate(expression, variables, label):
-            """Evaluate as a python literal except '*' and 'N/A'."""
-            if expression == WILD_CARD.DIRECTIVE:
-                return WILD_CARD
-            if expression == NOT_APPLICABLE.DIRECTIVE:
-                return NOT_APPLICABLE
-            col = eval(expression, variables)
-            if not col.__contains__:
-                raise ValueError("'%s' is not a collection" % expression)
-            return col
-
-        @staticmethod
-        def match(a, b):
-            if b in a:
-                return True
-            return False
-
-    #
-    # Following classes are used in Table.join
-    #
-
-    class Virtual(Value):
-
-        @staticmethod
-        def evaluate(expression, variables, label):
-            assert False, 'Cannot call Virtual.evaluate'
-
-    class ValueJoinValue(Value):
-
-        def __init__(self, left_type, right_type):
-            self.left_type = left_type
-            self.right_type = right_type
-
-        def join_values(self, left_value, right_value):
-            """Return intersection of two values."""
-            try:
-                return WILD_CARD.get_intercect(left_value, right_value)
-            except IntersectionNotFound:
-                pass
-
-            if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
-                return NOT_APPLICABLE
-
-            if self.left_type.match(left_value, right_value):
-                # left and right are equivalent
-                return left_value
-
-            raise IntersectionNotFound
-
-    class ValueJoinSet(Value):
-        def __init__(self, left_type, right_type):
-            self.left_type = left_type
-            self.right_type = right_type
-
-        def join_values(self, left_value, right_value):
-            """Return intersection of two values."""
-            try:
-                return WILD_CARD.get_intercect(left_value, right_value)
-            except IntersectionNotFound:
-                pass
-
-            if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
-                return NOT_APPLICABLE
-
-            if self.right_type.match(right_value, left_value):
-                return left_value
-
-            raise IntersectionNotFound
-
-    class SetJoinValue(Value):
-        def __init__(self, left_type, right_type):
-            self.left_type = left_type
-            self.right_type = right_type
-
-        def join_values(self, left_value, right_value):
-            """Return intersection of two values."""
-            try:
-                return WILD_CARD.get_intercect(left_value, right_value)
-            except IntersectionNotFound:
-                pass
-
-            if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
-                return NOT_APPLICABLE
-
-            if self.left_type.match(left_value, right_value):
-                return right_value
-
-            raise IntersectionNotFound
-
-    class SetJoinSet(Condition):
-        def __init__(self, left_type, right_type):
-            self.left_type = left_type
-            self.right_type = right_type
-
-        def join_values(self, left_value, right_value):
-            """Return intersection of two values."""
-            try:
-                return WILD_CARD.get_intercect(left_value, right_value)
-            except IntersectionNotFound:
-                pass
-
-            if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
-                return NOT_APPLICABLE
-
-            return lambda x: (self.left_type.match(left_value, x) and
-                              self.right_type.match(right_value, x))
+        return lambda x: (self.left_type.match(left_value, x) and
+                          self.right_type.match(right_value, x))
 
 
 class IntersectionNotFound(Exception):
