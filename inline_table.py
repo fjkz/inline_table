@@ -631,9 +631,7 @@ class ColumnTypeBase:
 class ValueTypeBase(ColumnTypeBase):
     """Abstract class of value type types."""
 
-    @property
-    def is_set(self):
-        return False
+    is_set = False
 
     def join(self, other):
         if other.is_set:
@@ -648,9 +646,7 @@ class ValueTypeBase(ColumnTypeBase):
 class SetTypeBase(ColumnTypeBase):
     """Abstract class of set type types."""
 
-    @property
-    def is_set(self):
-        return True
+    is_set =  True
 
     def join(self, other):
         if other.is_set:
