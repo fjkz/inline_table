@@ -613,7 +613,7 @@ def get_column_type(directive):
     for type_cls in (
             ValueType, ConditionType, StringType,
             RegexType, CollectionType):
-        if directive in type_cls.DIRECTIVES:
+        if directive in type_cls.directives:
             return type_cls()
     else:
         raise TableMarkupError("Invalid directive '%s'" % directive)
@@ -622,10 +622,10 @@ def get_column_type(directive):
 class ColumnTypeBase:
     """Abstract class of all type types."""
 
-    DIRECTIVES = ()
+    directives = ()
 
     def __eq__(self, other):
-        return self.DIRECTIVES == other.DIRECTIVES
+        return self.directives == other.directives
 
 
 class ValueTypeBase(ColumnTypeBase):
@@ -666,7 +666,8 @@ class ValueType(ValueTypeBase):
     This column type is default.
     """
 
-    DIRECTIVES = ('(value)', '(val)', '')  # Empty string is here.
+    # Empty string is here.
+    directives = ('', '(value)', '(val)', '')
 
     def __str__(self):
         return 'value'
@@ -674,9 +675,9 @@ class ValueType(ValueTypeBase):
     @staticmethod
     def evaluate(expression, variables, label):
         """Evaluate a string in the table cell."""
-        if expression == WILD_CARD.DIRECTIVE:
+        if expression == WILD_CARD.directive:
             return WILD_CARD
-        if expression == NOT_APPLICABLE.DIRECTIVE:
+        if expression == NOT_APPLICABLE.directive:
             return NOT_APPLICABLE
         return eval(expression, variables)
 
@@ -687,7 +688,7 @@ class ConditionType(SetTypeBase):
     Data in a condition column is converted to functions.
     """
 
-    DIRECTIVES = ('(condition)', '(cond)')
+    directives = ('(condition)', '(cond)')
 
     def __str__(self):
         return 'condition'
@@ -715,9 +716,9 @@ class ConditionType(SetTypeBase):
             False
 
         """
-        if expression == WILD_CARD.DIRECTIVE:
+        if expression == WILD_CARD.directive:
             return WILD_CARD
-        if expression == NOT_APPLICABLE.DIRECTIVE:
+        if expression == NOT_APPLICABLE.directive:
             return NOT_APPLICABLE
 
         # Use first letter as symbol
@@ -739,7 +740,7 @@ class StringType(ValueTypeBase):
     column type.
     """
 
-    DIRECTIVES = ('(string)', '(str)')
+    directives = ('(string)', '(str)')
 
     def __str__(self):
         return 'string'
@@ -757,16 +758,16 @@ class RegexType(SetTypeBase):
     column type.
     """
 
-    DIRECTIVES = ('(regex)', '(re)')
+    directives = ('(regex)', '(re)')
 
     def __str__(self):
         return 'regex'
 
     @staticmethod
     def evaluate(expression, variables, label):
-        if expression == WILD_CARD.DIRECTIVE:
+        if expression == WILD_CARD.directive:
             return WILD_CARD
-        if expression == NOT_APPLICABLE.DIRECTIVE:
+        if expression == NOT_APPLICABLE.directive:
             return NOT_APPLICABLE
 
         # Evaluate as Python literals and compile as a regular expression.
@@ -782,7 +783,7 @@ class RegexType(SetTypeBase):
 class CollectionType(SetTypeBase):
     """Collection."""
 
-    DIRECTIVES = '(collection), (coll)'
+    directives = '(collection), (coll)'
 
     def __str__(self):
         return 'collection'
@@ -790,9 +791,9 @@ class CollectionType(SetTypeBase):
     @staticmethod
     def evaluate(expression, variables, label):
         """Evaluate as a python literal except '*' and 'N/A'."""
-        if expression == WILD_CARD.DIRECTIVE:
+        if expression == WILD_CARD.directive:
             return WILD_CARD
-        if expression == NOT_APPLICABLE.DIRECTIVE:
+        if expression == NOT_APPLICABLE.directive:
             return NOT_APPLICABLE
         col = eval(expression, variables)
         if not col.__contains__:
@@ -913,7 +914,7 @@ class _WildCard:
     do not create a object directly.
     """
 
-    DIRECTIVE = '*'
+    directive = '*'
 
     def __eq__(self, other):
         """Return True for any object."""
@@ -937,7 +938,7 @@ class _WildCard:
 
     def __str__(self):
         """Return '*'."""
-        return self.DIRECTIVE
+        return self.directives
 
     def __repr__(self):
         """Return 'WILD_CARD'."""
@@ -969,7 +970,7 @@ class _NotApplicable:
     do not create a object directly.
     """
 
-    DIRECTIVE = 'N/A'
+    directive = 'N/A'
 
     def __eq__(self, other):
         """Return False for any object."""
@@ -993,7 +994,7 @@ class _NotApplicable:
 
     def __str__(self):
         """Return 'N/A'."""
-        return self.DIRECTIVE
+        return self.directives
 
     def __repr__(self):
         """Return 'NOT_APPLICABLE'."""
