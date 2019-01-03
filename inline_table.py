@@ -649,7 +649,7 @@ class ValueTypeBase(ColumnTypeBase):
 class SetTypeBase(ColumnTypeBase):
     """Abstract class of set type types."""
 
-    is_set =  True
+    is_set = True
 
     def join(self, other):
         if other.is_set:
@@ -940,7 +940,7 @@ class _WildCard:
 
     def __str__(self):
         """Return '*'."""
-        return self.directives
+        return self.directive
 
     def __repr__(self):
         """Return 'WILD_CARD'."""
@@ -996,7 +996,7 @@ class _NotApplicable:
 
     def __str__(self):
         """Return 'N/A'."""
-        return self.directives
+        return self.directive
 
     def __repr__(self):
         """Return 'NOT_APPLICABLE'."""
