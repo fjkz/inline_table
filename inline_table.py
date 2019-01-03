@@ -249,8 +249,9 @@ class Table:
 
     @property
     def _labels(self):
-        """Return labels."""
-        return self.column_types._fields
+        """Return label names of each column."""
+        # _fields is defined in namedtuple().
+        return self.tuple_class._fields
 
     @property
     def _num_columns(self):
