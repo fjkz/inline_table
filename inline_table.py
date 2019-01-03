@@ -155,12 +155,9 @@ def compile(text, **variables):
     table = create_table(labels, column_types)
     for row in rows:
         # Evaluate the literal in each cell with given variables.
-        row_evaluated = []
-        for i, cell in enumerate(row):
-            column_type = column_types[i]
-            label = labels[i]
-            eval_val = column_type.evaluate(cell, variables, label)
-            row_evaluated.append(eval_val)
+        row_evaluated = [
+            coltype.evaluate(field, variables, label)
+            for coltype, field, label in zip(column_types, row, labels)]
         table._insert(row_evaluated)
     return table
 
@@ -394,8 +391,8 @@ class Table:
             if len(values) != self._num_columns:
                 return False
             condition = {}
-            for i, label in enumerate(self._labels):
-                condition[label] = values[i]
+            for label, value in zip(self._labels, values):
+                condition[label] = value
             return self.contains(condition)
 
         else:
@@ -607,8 +604,7 @@ class Table:
         # union column types   val    cond   val    cond   cond   cond
         l_ctypes = get_ctypes(self)
         r_ctypes = get_ctypes(other)
-        union_ctypes = [l_ctypes[i].join(r_ctypes[i])
-                        for i, _ in enumerate(union_labels)]
+        union_ctypes = [l.join(r) for l, r in zip(l_ctypes, r_ctypes)]
 
         joined_table = create_table(union_labels, union_ctypes)
 
@@ -628,12 +624,12 @@ class Table:
         #     row, else add to the joined table.
         for l_row, r_row in itertools.product(self.rows, other.rows):
             joined_row = []
-            for i, label in enumerate(union_labels):
+            for label, ctype in zip(union_labels, union_ctypes):
                 # If the row does not have the label, return the wild card.
                 l_value = l_row.get(label, default=WILD_CARD)
                 r_value = r_row.get(label, default=WILD_CARD)
                 try:
-                    value = union_ctypes[i].join_values(l_value, r_value)
+                    value = ctype.join_values(l_value, r_value)
                 except IntersectionNotFound:
                     break
                 joined_row.append(value)
