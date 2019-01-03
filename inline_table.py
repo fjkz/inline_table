@@ -210,8 +210,12 @@ def create_table(labels, column_types=None):
     :param column_types: list of column types
     """
     table = Table()
+
     # Create a type of named tuple.
-    plaintuple_class = collections.namedtuple('PlainTuple', labels)
+
+    # We named this base class also 'Tuple' because the name
+    # does not seem to be overwritten by inheritance in Python2
+    plaintuple_class = collections.namedtuple('Tuple', labels)
 
     # We name the type name as 'Tuple'. Traditionally, the row of
     # relational database is called tuple and it has attributes.
