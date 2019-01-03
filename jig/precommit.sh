@@ -3,17 +3,10 @@
 set -eux -o pipefail
 cd $(dirname ${BASH_SOURCE:-$0})/..
 
-python2 --version >&2
-python2 setup.py test
-
 python3 --version >&2
 python3 setup.py test
-
 pycodestyle *.py
 pydocstyle *.py
+pyflakes *.py
 
 rst2html5.py README.rst README.html
-
-export PYTHONPATH=${PWD}
-cd doc
-make html
