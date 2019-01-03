@@ -218,8 +218,15 @@ def create_table(labels, column_types=None):
     class Tuple(plaintuple_class):
         """Row dataset."""
 
-    class ColumnTypeSet(plaintuple_class):
-        """Special taple that contains the types of each field."""
+        def get(self, label):
+            """Get the value on the labele."""
+            try:
+                return getattr(self, label)
+            except AttributeError:
+                raise LookupError("Label '%s' is invalid" % label)
+
+    class ColumnTypeSet(Tuple):
+        """Special tuple that contains the types of each field."""
 
         def __str__(self):
             """Return formatted string."""
@@ -426,18 +433,11 @@ class Table:
             return ', '.join(
                 [key + '=' + repr(value) for key, value in condition.items()])
 
-        def get_value(named_tuple, label):
-            """Get the value on the label from the named tuple."""
-            try:
-                return getattr(named_tuple, label)
-            except AttributeError:
-                raise LookupError("Label '%s' is invalid" % label)
-
         def match(row):
             """Return True if all values in the row match the condition."""
             for label, condition_value in condition.items():
-                row_value = get_value(row, label)
-                column_type = get_value(self.column_types, label)
+                row_value = row.get(label)
+                column_type = self.column_types.get(label)
                 if not column_type.match(row_value, condition_value):
                     return False
             return True
