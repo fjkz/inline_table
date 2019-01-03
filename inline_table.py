@@ -1007,7 +1007,7 @@ def estimate_format(lines):
     :pram lines: lines of the table text
     :return: estimated table format
     """
-    for fmt in (REST_SIMPLE_TABLE, REST_GRID_TABLE, MARKDOWN_TABLE):
+    for fmt in (ReSTSimpleTable, ReSTGridTable, MarkdownTable):
         if fmt.can_accept(lines):
             return fmt
 
@@ -1096,7 +1096,7 @@ class ReSTSimpleTable:
 
         :Example:
 
-            >>> REST_SIMPLE_TABLE.parse('''\
+            >>> ReSTSimpleTable.parse('''\
             ... ==== ====
             ...  A    B
             ... ==== ====
@@ -1106,7 +1106,7 @@ class ReSTSimpleTable:
             ... '''.splitlines())
             (['A', 'B'], [['a1', 'b1'], ['a2', 'b2']])
 
-            >>> REST_SIMPLE_TABLE.parse('''\
+            >>> ReSTSimpleTable.parse('''\
             ... ==== ====
             ...  A    B
             ... (a)  (b)
@@ -1135,7 +1135,7 @@ class ReSTGridTable:
 
         :Example:
 
-            >>> REST_GRID_TABLE.parse('''\
+            >>> ReSTGridTable.parse('''\
             ... +-----+-----+
             ... |  A  |  B  |
             ... | (a) | (b) |
@@ -1181,7 +1181,7 @@ class MarkdownTable:
 
         :Example:
 
-            >>> MARKDOWN_TABLE.parse('''\
+            >>> MarkdownTable.parse('''\
             ... |  A  |  B  |  C  |
             ... |-----|:--- | ---:|
             ... |  a  |  b  |  c  |
@@ -1194,11 +1194,6 @@ class MarkdownTable:
         header = split_cell(lines[0])
         body = [split_cell(line) for line in lines[2:]]
         return header, body
-
-
-REST_SIMPLE_TABLE = ReSTSimpleTable()
-REST_GRID_TABLE = ReSTGridTable()
-MARKDOWN_TABLE = MarkdownTable()
 
 
 class TableMarkupError(ValueError):

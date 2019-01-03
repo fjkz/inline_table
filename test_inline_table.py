@@ -8,7 +8,7 @@ from docutils.statemachine import StringList
 import inline_table
 from inline_table import (
     ColumnType, WILD_CARD, NOT_APPLICABLE, Table, TableMarkupError,
-    compile, REST_SIMPLE_TABLE, REST_GRID_TABLE, MARKDOWN_TABLE,
+    compile, ReSTSimpleTable, ReSTGridTable, MarkdownTable,
     estimate_format)
 
 
@@ -189,61 +189,61 @@ class TestFormatEstimation(unittest.TestCase):
     def test_simple_table1(self):
         self.assertEstimatedTo(
             ['=== ===\n'] * 3,
-            REST_SIMPLE_TABLE)
+            ReSTSimpleTable)
 
     def test_simple_table2(self):
         self.assertEstimatedTo(
             ['==\n'] * 3,
-            REST_SIMPLE_TABLE)
+            ReSTSimpleTable)
 
     def test_grid_table1(self):
         self.assertEstimatedTo(
             ['+---+---+\n',
              '+===+===+\n',
              '+---+---+\n'],
-            REST_GRID_TABLE)
+            ReSTGridTable)
 
     def test_grid_table2(self):
         self.assertEstimatedTo(
             ['+--+\n',
              '+==+\n',
              '+--+'],
-            REST_GRID_TABLE)
+            ReSTGridTable)
 
     def test_markdown1(self):
         self.assertEstimatedTo(
             ['| a | b |\n',
              '|---|---|\n',
              '| c | d |\n'],
-            MARKDOWN_TABLE)
+            MarkdownTable)
 
     def test_markdown2(self):
         self.assertEstimatedTo(
             ['| a | b |\n',
              '| - | - |\n',
              '| c | d |\n'],
-            MARKDOWN_TABLE)
+            MarkdownTable)
 
     def test_markdown3(self):
         self.assertEstimatedTo(
             ['| a | b |\n',
              '|:- | -:|\n',
              '| c | d |\n'],
-            MARKDOWN_TABLE)
+            MarkdownTable)
 
     def test_markdown4(self):
         self.assertEstimatedTo(
             [' a | b \n',
              '---|---\n',
              ' c | d \n'],
-            MARKDOWN_TABLE)
+            MarkdownTable)
 
     def test_markdown5(self):
         self.assertEstimatedTo(
             ['a | b | c \n',
              ':--- |:--- |: ---\n',
              'c | d | e \n'],
-            MARKDOWN_TABLE)
+            MarkdownTable)
 
     def test_invalid_format1(self):
         self.assertRaises(TableMarkupError,
@@ -257,7 +257,7 @@ class TestFormatEstimation(unittest.TestCase):
 class TestSimpleTableParser(unittest.TestCase):
 
     def assertParsedTo(self, text, expected):
-        parser = REST_SIMPLE_TABLE
+        parser = ReSTSimpleTable
         ret = parser.parse(text.splitlines())
         self.assertEqual(ret, expected)
 
@@ -305,7 +305,7 @@ class TestSimpleTableParser(unittest.TestCase):
 class TestGridTableParser(unittest.TestCase):
 
     def assertParsedTo(self, text, expected):
-        parser = REST_GRID_TABLE
+        parser = ReSTGridTable
         ret = parser.parse(text.splitlines())
         self.assertEqual(ret, expected)
 
@@ -353,7 +353,7 @@ class TestGridTableParser(unittest.TestCase):
 class TestMarkdownParser(unittest.TestCase):
 
     def assertParsedTo(self, text, expected):
-        parser = MARKDOWN_TABLE
+        parser = MarkdownTable
         ret = parser.parse(text.splitlines())
         self.assertEqual(ret, expected)
 
