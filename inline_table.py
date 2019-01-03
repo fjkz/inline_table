@@ -452,6 +452,7 @@ class Table:
             # for excepting the wild card.
             for label, value in condition.items():
                 kv = {label: value}
+                # _replace is defined in tuple class.
                 row = row._replace(**kv)
             yield row
 
