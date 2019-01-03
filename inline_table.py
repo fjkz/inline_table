@@ -221,6 +221,10 @@ def create_table(labels, column_types=None):
     class ColumnTypeSet(plaintuple_class):
         """Special taple that contains the types of each field."""
 
+        def __str__(self):
+            """Return formatted string."""
+            return '(%s)' % ', '.join([str(field) for field in self])
+
     table.tuple_class = Tuple
     table.types_class = ColumnTypeSet
 
@@ -491,14 +495,9 @@ class Table:
                     str(self._labels), str(other._labels)))
 
         if self.column_types != other.column_types:
-            def format_column_types(column_types):
-                """Format column type string."""
-                return '(%s)' % ', '.join([str(t) for t in column_types])
-
             raise TypeError(
                 "Column types of the tables are different: %s != %s" % (
-                    format_column_types(self.column_types),
-                    format_column_types(other.column_types)))
+                    str(self.column_types), str(other.column_types)))
 
         new_table = copy.copy(self)
         for row in other.rows:
