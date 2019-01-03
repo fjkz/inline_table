@@ -218,11 +218,13 @@ def create_table(labels, column_types=None):
     class Tuple(plaintuple_class):
         """Row dataset."""
 
-        def get(self, label):
+        def get(self, label, default=None):
             """Get the value on the labele."""
             try:
                 return getattr(self, label)
             except AttributeError:
+                if default is not None:
+                    return default
                 raise LookupError("Label '%s' is invalid" % label)
 
     class ColumnTypeSet(Tuple):
@@ -544,13 +546,9 @@ class Table:
         union_labels = sorted(set(l_labels) | set(r_labels), key=order)
 
         def get_ctypes(table):
-            ctypes = []
-            for label in union_labels:
-                try:
-                    ctype = getattr(table.column_types, label)
-                except AttributeError:
-                    ctype = VirtualType()
-                ctypes.append(ctype)
+            vtype = VirtualType()
+            ctypes = [table.column_types.get(label, default=vtype)
+                      for label in union_labels]
             return ctypes
 
         # labels               LABEL1 LABEL2 LABEL3 LABEL4 LABEL5 LABEL6
@@ -567,13 +565,6 @@ class Table:
         r_ctypes = get_ctypes(other)
         union_ctypes = [l_ctypes[i].join(r_ctypes[i])
                         for i, _ in enumerate(union_labels)]
-
-        def getvalue(row, label):
-            try:
-                return getattr(row, label)
-            except AttributeError:
-                # If the row does not have the label, return the wild card.
-                return WILD_CARD
 
         joined_table = create_table(union_labels, union_ctypes)
 
@@ -595,8 +586,9 @@ class Table:
                 #     row, else add to the joined table.
                 joined_row = []
                 for i, label in enumerate(union_labels):
-                    l_value = getvalue(l_row, label)
-                    r_value = getvalue(r_row, label)
+                    # If the row does not have the label, return the wild card.
+                    l_value = l_row.get(label, default=WILD_CARD)
+                    r_value = r_row.get(label, default=WILD_CARD)
                     try:
                         value = union_ctypes[i].join_values(l_value, r_value)
                     except IntersectionNotFound:
