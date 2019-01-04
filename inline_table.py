@@ -810,9 +810,7 @@ class RegexType(SetTypeBase):
 
     @staticmethod
     def match(a, b):
-        if a.match(b):
-            return True
-        return False
+        return bool(a.match(b))
 
 
 class CollectionType(SetTypeBase):
@@ -837,9 +835,7 @@ class CollectionType(SetTypeBase):
 
     @staticmethod
     def match(a, b):
-        if b in a:
-            return True
-        return False
+        return b in a
 
 
 #
@@ -1072,10 +1068,8 @@ class ReSTTable:
         first_line = lines[0]
         last_line = lines[-1]
 
-        if (re.match(line_pattern, first_line) and
-                re.match(line_pattern, last_line)):
-            return True
-        return False
+        return bool(re.match(line_pattern, first_line) and
+                    re.match(line_pattern, last_line))
 
     @staticmethod
     def parse(lines, parser):
@@ -1201,9 +1195,7 @@ class MarkdownTable:
         """Judge if the table is estimated to be this format."""
         if len(lines) < 3:
             return False
-        if re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]):
-            return True
-        return False
+        return bool(re.match(r' *\|? *[-:]+[-| :]*\|? *$', lines[1]))
 
     @classmethod
     def __split_cell(cls, line):
