@@ -713,10 +713,9 @@ class ValueType(ValueTypeBase):
     @staticmethod
     def evaluate(expression, variables, label):
         """Evaluate a string in the table cell."""
-        if expression == WILD_CARD.directive:
-            return WILD_CARD
-        if expression == NOT_APPLICABLE.directive:
-            return NOT_APPLICABLE
+        for spacial_value in (WILD_CARD, NOT_APPLICABLE):
+            if expression == spacial_value.directive:
+                return spacial_value
         return eval(expression, variables)
 
 
@@ -754,10 +753,9 @@ class ConditionType(SetTypeBase):
             False
 
         """
-        if expression == WILD_CARD.directive:
-            return WILD_CARD
-        if expression == NOT_APPLICABLE.directive:
-            return NOT_APPLICABLE
+        for spacial_value in (WILD_CARD, NOT_APPLICABLE):
+            if expression == spacial_value.directive:
+                return spacial_value
 
         # Use first letter as symbol
         symbol = label[0]
@@ -803,10 +801,9 @@ class RegexType(SetTypeBase):
 
     @staticmethod
     def evaluate(expression, variables, label):
-        if expression == WILD_CARD.directive:
-            return WILD_CARD
-        if expression == NOT_APPLICABLE.directive:
-            return NOT_APPLICABLE
+        for spacial_value in (WILD_CARD, NOT_APPLICABLE):
+            if expression == spacial_value.directive:
+                return spacial_value
 
         # Evaluate as Python literals and compile as a regular expression.
         return re.compile(eval(expression, variables))
@@ -829,10 +826,10 @@ class CollectionType(SetTypeBase):
     @staticmethod
     def evaluate(expression, variables, label):
         """Evaluate as a python literal except '*' and 'N/A'."""
-        if expression == WILD_CARD.directive:
-            return WILD_CARD
-        if expression == NOT_APPLICABLE.directive:
-            return NOT_APPLICABLE
+        for spacial_value in (WILD_CARD, NOT_APPLICABLE):
+            if expression == spacial_value.directive:
+                return spacial_value
+
         col = eval(expression, variables)
         if not col.__contains__:
             raise ValueError("'%s' is not a collection" % expression)
