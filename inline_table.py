@@ -135,30 +135,41 @@ def compile(text, **variables):
         ======= ===
 
     """
+    # Parse
     lines = strip_lines(text.splitlines())
     fmt = estimate_format(lines)
-    labels, rows = fmt.parse(lines)
-    column_type_directives = [''] * len(labels)
-
-    # Move '(...)' word from labels to column_types.
+    headers, rows = fmt.parse(lines)
+    # Move '(...)' word from header to column_types.
     # e.g.,
-    # label = 'a', column_type = '(a)'  --> label = 'a', column_type = '(a)'
-    # label = 'a(a)', column_type = ''  --> label = 'a', column_type = '(a)'
-    pattern = re.compile(r'([a-zA-Z_]+[0-9_]*) *(\([a-zA-Z0-9_]*\))')
-    for i, label in enumerate(labels):
-        match = pattern.match(label)
+    #   'a(b)' -> 'a', 'b'
+    #   'a'    -> 'a', ''
+    labels = []
+    column_type_directives = []
+    for head_str in (headers):
+        pattern = r'([a-zA-Z_]+[0-9_]*) *(\([a-zA-Z0-9_]*\))'
+        match = re.match(pattern, head_str)
         if match:
-            labels[i], column_type_directives[i] = match.group(1, 2)
+            label, directive = match.group(1, 2)
+        else:
+            label, directive = head_str, ''
+        labels.append(label)
+        column_type_directives.append(directive)
 
-    # Convert strings to ColumnType values
+    # Evaluate
     column_types = [get_column_type(d) for d in column_type_directives]
-    table = create_table(labels, column_types)
+    evaluated_rows = []
     for row in rows:
         # Evaluate the literal in each cell with given variables.
         row_evaluated = [
             coltype.evaluate(field, variables, label)
             for coltype, field, label in zip(column_types, row, labels)]
-        table._insert(row_evaluated)
+        evaluated_rows.append(row_evaluated)
+
+    # Build table
+    table = create_table(labels, column_types)
+    for row in evaluated_rows:
+        table._insert(row)
+
     return table
 
 
