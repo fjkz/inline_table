@@ -516,9 +516,8 @@ class Table:
 
             # Overwrite with the values in the condition
             # for excepting the wild card.
-            for label, value in query.items():
-                kv = {label: value}
-                row = row.replace(**kv)
+            row = row.replace(**query.condition)
+
             yield row
 
         # If no row is matched
