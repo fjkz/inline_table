@@ -145,7 +145,7 @@ def compile(text, **variables):
     #   'a'    -> 'a', ''
     labels = []
     column_type_directives = []
-    for head_str in (headers):
+    for head_str in headers:
         pattern = r'([a-zA-Z_]+[0-9_]*) *(\([a-zA-Z0-9_]*\))'
         match = re.match(pattern, head_str)
         if match:
