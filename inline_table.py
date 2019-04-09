@@ -663,8 +663,7 @@ def get_column_type(directive):
             RegexType, CollectionType):
         if directive in type_cls.directives:
             return type_cls()
-    else:
-        raise TableMarkupError("Invalid directive '%s'" % directive)
+    raise TableMarkupError("Invalid directive '%s'" % directive)
 
 
 class ColumnTypeBase:
