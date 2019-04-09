@@ -1074,8 +1074,8 @@ class TestIterable(unittest.TestCase):
 
 
 def suite():
-    suite = unittest.TestSuite()
-    suite.addTests([unittest.makeSuite(test_cls) for test_cls in (
+    test_suite = unittest.TestSuite()
+    test_suite.addTests([unittest.makeSuite(test_cls) for test_cls in (
         TestDocutils,
         TestFormatEstimation,
         TestSimpleTableParser,
@@ -1090,6 +1090,6 @@ def suite():
         TestColumnType,
         TestIterable,
         )])
-    suite.addTests(doctest.DocTestSuite(inline_table))
-    suite.addTests(doctest.DocFileSuite('README.rst'))
-    return suite
+    test_suite.addTests(doctest.DocTestSuite(inline_table))
+    test_suite.addTests(doctest.DocFileSuite('README.rst'))
+    return test_suite
