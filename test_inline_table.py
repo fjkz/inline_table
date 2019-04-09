@@ -648,7 +648,7 @@ class TestSelect(unittest.TestCase):
          1   1
         === ===
         """)
-        self.assertRaises(LookupError, lambda: tb.select())
+        self.assertRaises(LookupError, tb.select)
 
     def test_invalid_label(self):
         tb = compile("""
