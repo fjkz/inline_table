@@ -1084,21 +1084,26 @@ class TestIterable(unittest.TestCase):
 
 def suite():
     test_suite = unittest.TestSuite()
-    test_suite.addTests([unittest.makeSuite(test_cls) for test_cls in (
-        TestDocutils,
-        TestFormatEstimation,
-        TestSimpleTableParser,
-        TestGridTableParser,
-        TestMarkdownParser,
-        TestCompile,
-        TestSelect,
-        TestSelectAll,
-        TestTable,
-        TestUnion,
-        TestJoin,
-        TestColumnType,
-        TestIterable,
-        )])
+    test_suite.addTests(
+        [
+            unittest.makeSuite(test_cls)
+            for test_cls in (
+                TestDocutils,
+                TestFormatEstimation,
+                TestSimpleTableParser,
+                TestGridTableParser,
+                TestMarkdownParser,
+                TestCompile,
+                TestSelect,
+                TestSelectAll,
+                TestTable,
+                TestUnion,
+                TestJoin,
+                TestColumnType,
+                TestIterable,
+            )
+        ]
+    )
     test_suite.addTests(doctest.DocTestSuite(inline_table))
     test_suite.addTests(doctest.DocFileSuite('README.rst'))
     return test_suite

@@ -161,7 +161,8 @@ def compile(text, **variables):
         # Evaluate the literal in each cell with given variables.
         row_evaluated = [
             coltype.evaluate(field, variables, label)
-            for coltype, field, label in zip(column_types, row, labels)]
+            for coltype, field, label in zip(column_types, row, labels)
+        ]
         evaluated_rows.append(row_evaluated)
 
     # Build table
@@ -478,7 +479,8 @@ class Table:
         def __str__(self):
             """Format this objekct to 'key1=value1, key2=value2' style."""
             return ', '.join(
-                [key + '=' + repr(value) for key, value in self.items()])
+                [key + '=' + repr(value) for key, value in self.items()]
+            )
 
         def items(self):
             """Return items in the condition."""
@@ -509,8 +511,9 @@ class Table:
             # If the row is N/A raise an error.
             if NOT_APPLICABLE in row:
                 raise_error_if_allowed(
-                    "The result for the condition is not applicable: " +
-                    str(query))
+                    "The result for the condition is not applicable: "
+                    + str(query)
+                )
                 continue
 
             # Overwrite with the values in the condition
@@ -521,7 +524,8 @@ class Table:
 
         # If no row is matched
         raise_error_if_allowed(
-            "No row is found for the condition: " + str(query))
+            "No row is found for the condition: " + str(query)
+        )
         # stop iteration
 
     def union(self, other):
@@ -538,18 +542,21 @@ class Table:
         """
         if self._num_columns != other._num_columns:
             raise TypeError(
-                "Width of the tables are different: %d != %d" % (
-                    self._num_columns, other._num_columns))
+                "Width of the tables are different: %d != %d"
+                % (self._num_columns, other._num_columns)
+            )
 
         if self._labels != other._labels:
             raise TypeError(
-                "Labels of the tables are different: %s != %s" % (
-                    str(self._labels), str(other._labels)))
+                "Labels of the tables are different: %s != %s"
+                % (str(self._labels), str(other._labels))
+            )
 
         if self.column_types != other.column_types:
             raise TypeError(
-                "Column types of the tables are different: %s != %s" % (
-                    str(self.column_types), str(other.column_types)))
+                "Column types of the tables are different: %s != %s"
+                % (str(self.column_types), str(other.column_types))
+            )
 
         new_table = copy.copy(self)
         for row in other.rows:
@@ -597,8 +604,9 @@ class Table:
 
         def get_ctypes(table):
             vtype = VirtualType()
-            ctypes = [table._get_type(label, default=vtype)
-                      for label in union_labels]
+            ctypes = [
+                table._get_type(label, default=vtype) for label in union_labels
+            ]
             return ctypes
 
         # labels               LABEL1 LABEL2 LABEL3 LABEL4 LABEL5 LABEL6
@@ -658,8 +666,12 @@ class Table:
 def get_column_type(directive):
     """Return a column type that matches the given directive."""
     for type_cls in (
-            ValueType, ConditionType, StringType,
-            RegexType, CollectionType):
+        ValueType,
+        ConditionType,
+        StringType,
+        RegexType,
+        CollectionType,
+    ):
         if directive in type_cls.directives:
             return type_cls()
     raise TableMarkupError("Invalid directive '%s'" % directive)
@@ -936,8 +948,10 @@ class SetXSetType(ConditionType):
         if left_value is NOT_APPLICABLE and right_value is NOT_APPLICABLE:
             return NOT_APPLICABLE
 
-        return lambda x: (self.left_type.match(left_value, x) and
-                          self.right_type.match(right_value, x))
+        return lambda x: (
+            self.left_type.match(left_value, x)
+            and self.right_type.match(right_value, x)
+        )
 
 
 class IntersectionNotFound(Exception):
@@ -1076,8 +1090,10 @@ class ReSTTable:
         first_line = lines[0]
         last_line = lines[-1]
 
-        return bool(re.match(line_pattern, first_line) and
-                    re.match(line_pattern, last_line))
+        return bool(
+            re.match(line_pattern, first_line)
+            and re.match(line_pattern, last_line)
+        )
 
     @staticmethod
     def parse(lines, parser):
