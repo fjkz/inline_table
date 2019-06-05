@@ -9,12 +9,11 @@ import copy
 import itertools
 import re
 
-from docutils.parsers.rst.tableparser \
-    import SimpleTableParser as DocutilsSimpleTableParser
-from docutils.parsers.rst.tableparser \
-    import GridTableParser as DocutilsGridTableParser
-from docutils.parsers.rst.tableparser \
-    import TableMarkupError as DocutilsTableMarkupError
+from docutils.parsers.rst.tableparser import (
+    SimpleTableParser as DocutilsSimpleTableParser,
+    GridTableParser as DocutilsGridTableParser,
+    TableMarkupError as DocutilsTableMarkupError,
+)
 from docutils.statemachine import StringList
 
 __docformat__ = 'reStructuredText'

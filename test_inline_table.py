@@ -7,10 +7,19 @@ from docutils.statemachine import StringList
 
 import inline_table
 from inline_table import (
-    compile, create_table, TableMarkupError,
-    ValueType, ConditionType, StringType,
-    WILD_CARD, NOT_APPLICABLE,
-    ReSTSimpleTable, ReSTGridTable, MarkdownTable, estimate_format)
+    compile,
+    create_table,
+    TableMarkupError,
+    ValueType,
+    ConditionType,
+    StringType,
+    WILD_CARD,
+    NOT_APPLICABLE,
+    ReSTSimpleTable,
+    ReSTGridTable,
+    MarkdownTable,
+    estimate_format,
+)
 
 
 class TestDocutils(unittest.TestCase):
